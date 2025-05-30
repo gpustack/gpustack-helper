@@ -91,6 +91,8 @@ class CleanConfig(_FileConfigModel, Config):
     def bind(cls, key: str, widget: QWidget, /, ignore_zero: bool = False) -> DataBinder:
         return DataBinder(key, cls, widget, ignore_zero_value=ignore_zero)
     
+    def load_active_config(self) -> 'CleanConfig':
+        return CleanConfig(active_dir=self._active_dir, filepath=self.active_config_path)
 
 class _HelperConfig(BaseModel):
     class _EnvVars(BaseModel):

@@ -41,9 +41,17 @@ def open_log_dir() -> None:
     open_and_select_file(log_file_path, selected=os.path.exists(log_file_path))
 
 @Slot()
-def open_browser() -> None:
-    # 要打开的URL
-    url = QUrl("http://localhost")  # 替换为你想要的URL
+def open_browser(cfg: HelperConfig) -> None:
+    config = cfg.user_gpustack_config.load_active_config()
+    if config.server_url is not None and config.server_url != '':
+        url = QUrl(config.server_url)
+    else:
+        is_tls = config.ssl_certfile is not None and config.ssl_keyfile is not None
+        port = config.port
+        if port is None or port == 0:
+            port = 443 if is_tls else 80
+        hostname = config.host if config.host is not None and config.host != '' else 'localhost'
+        url = QUrl(f"http{'s' if is_tls else ''}://{hostname}:{port}")
     
     # 使用默认浏览器打开URL
     # TODO 如果打开不了的话需要弹出消息框
@@ -160,7 +168,7 @@ def main():
     status.status_signal.connect(set_tray_icon)
 
     open_gpustack = create_menu_action("控制台", menu)
-    open_gpustack.triggered.connect(open_browser)
+    open_gpustack.triggered.connect(lambda: open_browser(cfg))
     open_gpustack.setDisabled(True)
     menu.addSeparator()
     
