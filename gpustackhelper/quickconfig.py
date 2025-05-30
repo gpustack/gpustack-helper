@@ -200,9 +200,7 @@ class QuickConfig(QDialog):
             return
         id = self.group.id(button)
         for widget in self.server_url:
-            widget.setVisible(id == self._worker_index)
-        for widget in self.token:
-            widget.setVisible(id == self._worker_index)
+            widget.setEnabled(id == self._worker_index)
     
     def create_environment_variable_page(self) -> QWidget:
         page = QWidget()
@@ -297,14 +295,12 @@ class QuickConfig(QDialog):
         # 额外处理 server_url 和 token 的显示
         if config.server_url is not None and config.server_url != '':
             self.server_url[1].setText(config.server_url)
-            self.token[1].setText(config.token if config.token is not None else '')
             self.group.button(self._worker_index).setChecked(True)
 
     def accept(self):
         # 处理ButtonGroup的状态，当选择不是 Server + Worker 时清空输入
         if self.group.checkedId()!= self._worker_index:
             self.server_url[1].setText('')
-            self.token[1].setText('')
 
         # 更新Helper配置
         data: Dict[str, any] = {}

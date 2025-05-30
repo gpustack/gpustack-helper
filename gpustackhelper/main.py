@@ -103,7 +103,7 @@ class Configuration():
     def copy_token_to_clipboard(self):
         clickboard = QApplication.clipboard()
         gpustack_config = self.cfg.user_gpustack_config
-        if gpustack_config.server_url is not None and gpustack_config.token is not None:
+        if gpustack_config.token is not None:
             clickboard.setText(gpustack_config.token)
             return
         
