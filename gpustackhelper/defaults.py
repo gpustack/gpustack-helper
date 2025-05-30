@@ -39,8 +39,16 @@ def open_and_select_file(file_path: str, selected: bool = True) -> None:
         }
     } 
     args = path_func[sys.platform][selected](file_path)
+    subprocess.Popen(args)
 
-    subprocess.Popen(args=args)
+def open_with_app(file_path: str) -> None:
+    if sys.platform != 'darwin' and sys.platform != 'win32':
+        raise NotImplementedError("Unsupported platform for opening file with app")
+    if not os.path.exists(file_path):
+        raise FileNotFoundError(f"The file {file_path} does not exist.")
+    app_command = ['open', '-a', 'Console'] if sys.platform == 'darwin' else ["notepad.exe"]
+    app_command.append(file_path)
+    subprocess.Popen(app_command)
 
 def get_lagecy_env_file() -> str:
     if sys.platform == 'darwin':

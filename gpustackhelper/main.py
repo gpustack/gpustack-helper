@@ -18,6 +18,7 @@ from gpustackhelper.defaults import (
     log_file_path,
     icon_path,
     open_and_select_file,
+    open_with_app,
 )
 from gpustackhelper.config import HelperConfig
 from gpustackhelper.quickconfig  import QuickConfig
@@ -38,7 +39,7 @@ def show_about():
 
 @Slot()
 def open_log_dir() -> None:
-    open_and_select_file(log_file_path, selected=os.path.exists(log_file_path))
+    open_with_app(log_file_path)
 
 @Slot()
 def open_browser(cfg: HelperConfig) -> None:
