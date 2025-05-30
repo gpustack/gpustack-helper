@@ -1,7 +1,9 @@
 import logging
 from PySide6.QtWidgets import (
     QMenu,
+    QMessageBox,
 )
+import socket
 import subprocess
 import re
 import os
@@ -9,9 +11,9 @@ from os.path import abspath, dirname, exists, islink
 from enum import Enum
 from PySide6.QtGui import QAction, QActionGroup
 from PySide6.QtCore import QTimer, Slot, Signal, QProcess
-from typing import Dict, Any, Optional, List, Tuple, Callable
+from typing import Dict, Any, Optional, List, Tuple
 from gpustackhelper.config import HelperConfig
-from gpustackhelper.common import create_menu_action
+from gpustackhelper.common import create_menu_action, show_warning
 
 logger = logging.getLogger(__name__)
 service_id = 'system/ai.gpustack'
@@ -141,9 +143,14 @@ class Status(QMenu):
     @Slot()
     def start_or_stop_action(self):
         self.start_or_stop.setDisabled(True)
-        self.status = state.STARTING if self.status == state.STOPPED else state.STOPPING
+        if self.status == state.STOPPED and not self.is_port_available():
+            config = self.cfg.user_gpustack_config
+            port = config.port
+            host = config.host
+            show_warning(self, "端口不可用", f"无法启动服务，因为端口 {host}:{port} 已被占用。请检查是否有其他服务在运行。")
+        else:
+            self.status = state.STARTING if self.status == state.STOPPED else state.STOPPING
         self.start_or_stop.setEnabled(True)
-        pass
 
     @Slot()
     def restart_action(self):
@@ -243,6 +250,17 @@ launchctl bootout {service_id}\
             self.qprocess_launch.waitForFinished()
         if self.qprocess_stop is not None:
             self.qprocess_stop.waitForFinished()
+    def is_port_available(self) -> bool:
+        config = self.cfg.user_gpustack_config
+        port = config.port
+        host = config.host
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            try:
+                s.bind((host, port))
+                return True
+            except OSError:
+                return False
+        
 
 def get_start_script(cfg: HelperConfig, restart: bool = False) -> str:
     gpustack_config = cfg.user_gpustack_config
