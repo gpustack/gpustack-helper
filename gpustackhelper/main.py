@@ -21,7 +21,7 @@ from gpustackhelper.defaults import (
     open_with_app,
 )
 from gpustackhelper.config import HelperConfig
-from gpustackhelper.quickconfig  import QuickConfig
+from gpustackhelper.quickconfig.dialog  import QuickConfig
 from gpustackhelper.status import Status, state
 from gpustackhelper.common import create_menu_action
 from gpustackhelper.icon import get_icon

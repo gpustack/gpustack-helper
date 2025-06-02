@@ -1,12 +1,12 @@
-from PySide6.QtCore import QObject, Signal, Slot
-from PySide6.QtWidgets import QLineEdit, QAbstractButton, QSpinBox
+from PySide6.QtCore import Qt, QObject, Signal, Slot
+from PySide6.QtWidgets import QLineEdit, QAbstractButton, QSpinBox, QTableWidget, QComboBox, QTableWidgetItem
 from typing import Callable, TypeVar, Type, Union, Dict, Any, Optional
 from pydantic import BaseModel
 from PySide6.QtGui import QAction, QIntValidator
 from pydantic.fields import FieldInfo
 
-supported_types = (str, int, bool, float)
-T = TypeVar('T', str, int, bool, float)
+supported_types = (str, int, bool, float, Dict[str, str])
+T = TypeVar('T', str, int, bool, float, Dict[str, str])
 T_BaseModel = TypeVar('T_BaseModel', bound=BaseModel)  # 定义在模块顶部
 
 def _get_base_type(key_type: Type[T]) -> Type[T]:
@@ -22,6 +22,8 @@ def _get_base_type(key_type: Type[T]) -> Type[T]:
 def get_zero_value(t: Type[T]) -> T:
     if t is bool:
         return False  # bool() 返回 False，但你可能想要 False 而不是 bool()
+    if t is Dict[str, str]:
+        return dict()
     return t()
 
 class DataBinder(QObject):
@@ -56,7 +58,40 @@ class DataBinder(QObject):
         elif isinstance(widget,QSpinBox):
             self._widget_getter = widget.value
             self._widget_setter = widget.setValue
-        else:
+        elif isinstance(widget, QTableWidget):
+            if widget.columnCount() != 2:
+                raise ValueError("QTableWidget must have exactly 2 columns for key-value pairs")
+            def _get_table_value() -> Dict[str, str]:
+                """获取表格中所有行的键值对"""
+                result = {}
+                for row in range(widget.rowCount()):
+                    key_item = widget.cellWidget(row, 0)  # 假设第一列是键
+                    # only supports QComboBox for now
+                    if isinstance(key_item, QComboBox):
+                        key = key_item.currentText()
+                    else:
+                        continue
+                    value_item = widget.item(row, 1)
+                    if value_item and value_item.text() != '':
+                        result[key] = value_item.text()
+                return result
+            def _set_table_value(value: Dict[str, str]) -> None:
+                widget.setRowCount(0)
+                for k, v in value.items():
+                    row_position = widget.rowCount()
+                    widget.insertRow(row_position)
+                    # 第一列为可编辑下拉列表
+                    combo = QComboBox()
+                    combo.setEditable(True)
+                    combo.addItem(k)
+                    widget.setCellWidget(row_position, 0, combo)
+                    # 第二列为可编辑文本
+                    item = QTableWidgetItem(v)
+                    item.setFlags(item.flags() | Qt.ItemFlag.ItemIsEditable)
+                    widget.setItem(row_position, 1, item)
+            self._widget_getter = _get_table_value
+            self._widget_setter = _set_table_value
+        else: 
             raise ValueError(f"Widget {widget.__class__.__name__} has no text or isChecked method")
         self.load_config.connect(self._load_to_widget)
 

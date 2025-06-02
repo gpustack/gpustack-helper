@@ -88,16 +88,13 @@ class CleanConfig(_FileConfigModel, Config):
         return os.path.join(self._active_dir, os.path.basename(self.filepath))
 
     @classmethod
-    def bind(cls, key: str, widget: QWidget, /, ignore_zero: bool = False) -> DataBinder:
-        return DataBinder(key, cls, widget, ignore_zero_value=ignore_zero)
+    def bind(cls, key: str, widget: QWidget, /, ignore_zero_value: bool = False) -> DataBinder:
+        return DataBinder(key, cls, widget, ignore_zero_value=ignore_zero_value)
     
     def load_active_config(self) -> 'CleanConfig':
         return CleanConfig(active_dir=self._active_dir, filepath=self.active_config_path)
 
 class _HelperConfig(BaseModel):
-    class _EnvVars(BaseModel):
-        HF_TOKEN: Optional[str] = None
-        HF_ENDPOINT: Optional[str] = None
     Label: str = Field(default='ai.gpustack', description="服务名称")
     ProgramArguments: List[str] = Field(default_factory=list, description="启动服务时的参数列表")
     KeepAlive: bool = Field(default=True, description="服务是否保持运行")
@@ -105,13 +102,13 @@ class _HelperConfig(BaseModel):
     StandardOutPath: Optional[str] = Field(default=log_file_path, description="服务的可执行文件路径")
     StandardErrorPath: Optional[str] = Field(default=log_file_path, description="服务的错误输出路径")
     RunAtLoad: Optional[bool] = Field(default=False, description="是否在启动时自动启动服务")
-    EnvironmentVariables: _EnvVars = Field(default_factory=_EnvVars, description="环境变量配置")
+    EnvironmentVariables: Dict[str, str] = Field(default_factory=dict, description="环境变量配置")
 
 
 class HelperConfig(_FileConfigModel, _HelperConfig):
     _override_data_dir: Optional[str] = None
     _override_binary_path: Optional[str] = None
-    _debug: bool = False
+    _debug: bool = None
 
     def encode_to_data(self) -> bytes:
         return plistlib.dumps(self.model_dump(by_alias=True, exclude_none=True))
@@ -120,8 +117,8 @@ class HelperConfig(_FileConfigModel, _HelperConfig):
         return plistlib.load(f)
 
     @classmethod
-    def bind(cls, key: str, widget: QWidget, /, ignore_zero: bool = False) -> DataBinder:
-        return DataBinder(key, cls, widget, ignore_zero_value=ignore_zero)
+    def bind(cls, key: str, widget: QWidget, /, ignore_zero_value: bool = False) -> DataBinder:
+        return DataBinder(key, cls, widget, ignore_zero_value=ignore_zero_value)
 
     @property
     def user_data_dir(self) -> str:
