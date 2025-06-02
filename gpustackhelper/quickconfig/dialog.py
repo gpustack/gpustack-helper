@@ -9,10 +9,11 @@ from PySide6.QtWidgets import (
     QStackedWidget,
     QListWidget,
     QListWidgetItem,
+    QPushButton,
 )
 
 from PySide6.QtGui import QIcon
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt, Signal, Slot
 from gpustackhelper.config import HelperConfig, CleanConfig
 from gpustackhelper.quickconfig.common import (
     wrap_layout,
@@ -20,6 +21,7 @@ from gpustackhelper.quickconfig.common import (
 )
 from gpustackhelper.quickconfig.general import GeneralConfigPage
 from gpustackhelper.quickconfig.envvar import EnvironmentVariablePage
+from gpustackhelper.status import Status, state
 
 list_widget_style = """
     /* 整体列表样式 */
@@ -102,8 +104,10 @@ class QuickConfig(QDialog):
     signalOnShow = Signal(HelperConfig,CleanConfig, name='onShow')
     signalOnSave = Signal(HelperConfig,CleanConfig, name='onSave')
     pages: Tuple[Tuple[str, DataBindWidget]] = None
-    def __init__(self, cfg: HelperConfig = None, *args):
+    status: Status = None
+    def __init__(self, cfg: HelperConfig = None, status: Status= None, *args):
         self.cfg = cfg
+        self.status = status
         super().__init__(*args)
         self.setWindowTitle("快速配置")
         if sys.platform != 'darwin':
@@ -130,11 +134,30 @@ class QuickConfig(QDialog):
         right_layout.setContentsMargins(0,0,20,20)
         main_layout.addWidget(right_widget)
 
-    def config_confirm(self) -> QWidget:
+    def config_confirm(self) -> QDialogButtonBox:
         # Buttons
-        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
-        buttons.accepted.connect(self.accept)
+        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Save |QDialogButtonBox.StandardButton.Cancel)
         buttons.rejected.connect(self.reject)
+        ok = buttons.button(QDialogButtonBox.StandardButton.Ok)
+        ok.setText("Start")
+        ok.clicked.connect(self.save_and_start)
+        save = buttons.button(QDialogButtonBox.StandardButton.Save)
+        save.clicked.connect(self.save)
+
+        @Slot()
+        def on_state_changed(new_state: state):
+            if new_state == state.STARTED or new_state == state.TO_SYNC:
+                ok.setText("Restart")
+                ok.setEnabled(True)
+            elif new_state == state.STOPPED:
+                ok.setText("Start")
+                ok.setEnabled(True)
+            else:
+                ok.setText("Start")
+                ok.setEnabled(False)
+
+        self.status.status_signal.connect(on_state_changed)
+
         return buttons
 
     def showEvent(self, event):
@@ -143,7 +166,11 @@ class QuickConfig(QDialog):
         super().showEvent(event)
         self.signalOnShow.emit(self.cfg, config)
 
-    def accept(self):
+    def save_and_start(self):
+        self.save()
+        self.status.status = state.STARTING if self.status.status == state.STOPPED else state.RESTARTING
+
+    def save(self):
         # 处理ButtonGroup的状态，当选择不是 Server + Worker 时清空输入
         self.signalOnSave.emit(self.cfg, self.cfg.user_gpustack_config)
         
@@ -161,29 +188,3 @@ class QuickConfig(QDialog):
 
         super().accept()
         
-
-from PySide6.QtWidgets import QApplication
-
-if __name__ == "__main__":
-
-    app = QApplication(sys.argv)
-    # 创建一个假的 HelperConfig 以便调试
-    class DummyConfig:
-        def _reload(self): pass
-        def update_with_lock(self, **kwargs): pass
-        user_gpustack_config = type("DummyUserConfig", (), {
-            "server_url": "",
-            "token": "",
-            "port": 0,
-            "update_with_lock": lambda self, **kwargs: None
-        })()
-
-    dlg = QDialog()
-    dlg.setWindowTitle("Env Group 调试")
-    layout = QVBoxLayout(dlg)
-    qc = QuickConfig(cfg=DummyConfig())
-    env_group = qc.get_env_group()
-    layout.addWidget(env_group)
-    dlg.setLayout(layout)
-    dlg.show()
-    sys.exit(app.exec())

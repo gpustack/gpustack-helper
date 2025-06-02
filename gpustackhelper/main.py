@@ -8,6 +8,7 @@ from PySide6.QtWidgets import (
     QApplication, 
     QSystemTrayIcon, 
     QMenu,
+    QWidget
 )
 from PySide6.QtGui import QIcon, QAction, QDesktopServices
 from PySide6.QtCore import Slot, QUrl
@@ -16,14 +17,13 @@ import multiprocessing
 from gpustackhelper.databinder import DataBinder
 from gpustackhelper.defaults import (
     log_file_path,
-    icon_path,
     open_and_select_file,
     open_with_app,
 )
 from gpustackhelper.config import HelperConfig
 from gpustackhelper.quickconfig.dialog  import QuickConfig
 from gpustackhelper.status import Status, state
-from gpustackhelper.common import create_menu_action
+from gpustackhelper.common import create_menu_action, show_warning
 from gpustackhelper.icon import get_icon
 
 logger = logging.getLogger(__name__)
@@ -42,7 +42,7 @@ def open_log_dir() -> None:
     open_with_app(log_file_path)
 
 @Slot()
-def open_browser(cfg: HelperConfig) -> None:
+def open_browser(parent: QWidget, cfg: HelperConfig) -> None:
     config = cfg.user_gpustack_config.load_active_config()
     if config.server_url is not None and config.server_url != '':
         url = QUrl(config.server_url)
@@ -57,7 +57,7 @@ def open_browser(cfg: HelperConfig) -> None:
     # 使用默认浏览器打开URL
     # TODO 如果打开不了的话需要弹出消息框
     if not QDesktopServices.openUrl(url):
-        print("无法打开浏览器")
+        show_warning(parent, "打开浏览器失败", f"无法打开 URL: {url.toString()}\n请检查您的默认浏览器设置。")
 
 class Configuration():
     cfg: HelperConfig
@@ -67,7 +67,7 @@ class Configuration():
     boot_on_start: QAction
     copy_token: QAction
     binders: List[DataBinder] = list()
-    def __init__(self, cfg: HelperConfig ,parent: QMenu):
+    def __init__(self, cfg: HelperConfig, status: Status ,parent: QMenu):
         self.cfg = cfg
         parent.aboutToShow.connect(self.on_menu_shown)
 
@@ -77,7 +77,7 @@ class Configuration():
         self.boot_on_start.toggled.connect(self.update_and_save)
 
         # 快速配置
-        self.quick_config_dialog = QuickConfig(cfg)
+        self.quick_config_dialog = QuickConfig(cfg, status)
         self.quick_config = create_menu_action("快速配置", parent)
         self.quick_config.triggered.connect(self.quick_config_dialog.show)
 
@@ -129,6 +129,9 @@ class Configuration():
     def on_status_changed(self, state: state):
         self.copy_token.setEnabled(state == state.STARTED or state == state.TO_SYNC)
 
+    def is_first_boot(self) -> bool:
+        return not os.path.exists(self.cfg.filepath)
+
 def main():
     parser = argparse.ArgumentParser(description='GPUStack Helper')
     parser.add_argument('--data-dir', type=str, default=None, help='数据目录')
@@ -169,7 +172,7 @@ def main():
     status.status_signal.connect(set_tray_icon)
 
     open_gpustack = create_menu_action("控制台", menu)
-    open_gpustack.triggered.connect(lambda: open_browser(cfg))
+    open_gpustack.triggered.connect(lambda: open_browser(menu, cfg))
     open_gpustack.setDisabled(True)
     menu.addSeparator()
     
@@ -184,10 +187,8 @@ def main():
             
     app.aboutToQuit.connect(cleanup)
 
-    configure = Configuration(cfg, menu)
+    configure = Configuration(cfg, status, menu)
     status.status_signal.connect(configure.on_status_changed)
-
-
 
     # 打开日志
     log_action = create_menu_action("显示日志", menu)
@@ -207,6 +208,9 @@ def main():
     tray_icon.setContextMenu(menu)
     status.start_load_status()
     tray_icon.show()
+
+    if configure.is_first_boot():
+        configure.quick_config_dialog.show()
 
     sys.exit(app.exec())
 
