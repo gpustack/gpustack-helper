@@ -12,8 +12,8 @@ from enum import Enum
 from PySide6.QtGui import QAction, QActionGroup
 from PySide6.QtCore import QTimer, Slot, Signal, QProcess
 from typing import Dict, Any, Optional, List, Tuple
-from gpustackhelper.config import HelperConfig
-from gpustackhelper.common import create_menu_action, show_warning
+from gpustack_helper.config import HelperConfig
+from gpustack_helper.common import create_menu_action, show_warning
 
 logger = logging.getLogger(__name__)
 service_id = 'system/ai.gpustack'

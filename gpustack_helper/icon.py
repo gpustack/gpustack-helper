@@ -1,5 +1,5 @@
 from PySide6.QtGui import QIcon, QPixmap
-from gpustackhelper.defaults import icon_path
+from gpustack_helper.defaults import icon_path
 
 def create_disabled_icon(pixmap: QPixmap) -> QPixmap:
     image = pixmap.toImage()

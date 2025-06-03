@@ -7,9 +7,9 @@ from pydantic import BaseModel, Field
 from typing import Optional, Dict, Any, List, BinaryIO
 from gpustack.config import Config
 from PySide6.QtWidgets import QWidget
-from gpustackhelper.databinder import DataBinder, set_nested_data
+from gpustack_helper.databinder import DataBinder, set_nested_data
 
-from gpustackhelper.defaults import (
+from gpustack_helper.defaults import (
     log_file_path,
     data_dir as default_data_dir,
     global_data_dir,

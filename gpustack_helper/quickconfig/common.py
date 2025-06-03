@@ -1,8 +1,8 @@
 from typing import Optional, Dict, Any, BinaryIO, List, Tuple, Union
 from PySide6.QtWidgets import QLabel, QLineEdit, QSizePolicy, QSpinBox, QWidget, QLayout, QGroupBox, QFormLayout
 from PySide6.QtCore import Qt, SignalInstance
-from gpustackhelper.databinder import DataBinder
-from gpustackhelper.config import HelperConfig, CleanConfig
+from gpustack_helper.databinder import DataBinder
+from gpustack_helper.config import HelperConfig, CleanConfig
 from abc import abstractmethod
 
 group_box_style = """

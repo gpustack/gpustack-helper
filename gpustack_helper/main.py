@@ -14,17 +14,17 @@ from PySide6.QtGui import QIcon, QAction, QDesktopServices
 from PySide6.QtCore import Slot, QUrl
 from typing import Dict, Any, List
 import multiprocessing
-from gpustackhelper.databinder import DataBinder
-from gpustackhelper.defaults import (
+from gpustack_helper.databinder import DataBinder
+from gpustack_helper.defaults import (
     log_file_path,
     open_and_select_file,
     open_with_app,
 )
-from gpustackhelper.config import HelperConfig
-from gpustackhelper.quickconfig.dialog  import QuickConfig
-from gpustackhelper.status import Status, state
-from gpustackhelper.common import create_menu_action, show_warning
-from gpustackhelper.icon import get_icon
+from gpustack_helper.config import HelperConfig
+from gpustack_helper.quickconfig.dialog  import QuickConfig
+from gpustack_helper.status import Status, state
+from gpustack_helper.common import create_menu_action, show_warning
+from gpustack_helper.icon import get_icon
 
 logger = logging.getLogger(__name__)
 

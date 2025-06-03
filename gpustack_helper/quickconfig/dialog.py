@@ -14,14 +14,14 @@ from PySide6.QtWidgets import (
 
 from PySide6.QtGui import QIcon
 from PySide6.QtCore import Qt, Signal, Slot
-from gpustackhelper.config import HelperConfig, CleanConfig
-from gpustackhelper.quickconfig.common import (
+from gpustack_helper.config import HelperConfig, CleanConfig
+from gpustack_helper.quickconfig.common import (
     wrap_layout,
     DataBindWidget
 )
-from gpustackhelper.quickconfig.general import GeneralConfigPage
-from gpustackhelper.quickconfig.envvar import EnvironmentVariablePage
-from gpustackhelper.status import Status, state
+from gpustack_helper.quickconfig.general import GeneralConfigPage
+from gpustack_helper.quickconfig.envvar import EnvironmentVariablePage
+from gpustack_helper.status import Status, state
 
 list_widget_style = """
     /* 整体列表样式 */

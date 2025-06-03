@@ -31,7 +31,7 @@ datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 
 
 helper = Analysis(
-    ['gpustackhelper/main.py'],
+    ['gpustack_helper/main.py'],
     pathex=[],
     binaries=binaries,
     datas=datas,

@@ -12,9 +12,9 @@ from PySide6.QtWidgets import (
     )
 from PySide6.QtCore import Qt, Slot, SignalInstance
 from typing import Tuple, List, Union, Dict, Any, BinaryIO
-from gpustackhelper.config import HelperConfig, CleanConfig
-from gpustackhelper.databinder import DataBinder
-from gpustackhelper.quickconfig.common import (
+from gpustack_helper.config import HelperConfig, CleanConfig
+from gpustack_helper.databinder import DataBinder
+from gpustack_helper.quickconfig.common import (
     fixed_titled_input,
     fixed_titled_port_input,
     create_stand_box,
