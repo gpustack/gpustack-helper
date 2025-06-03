@@ -256,9 +256,11 @@ launchctl bootout {service_id}\
         host = config.host
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             try:
+                s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                 s.bind((host, port))
                 return True
-            except OSError:
+            except OSError as e:
+                logger.debug(f"端口 {host}:{port} 不可用: {e}")
                 return False
         
 
