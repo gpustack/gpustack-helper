@@ -8,8 +8,9 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = ">=3.10,<3.13"
-gpustack = { path = '/Users/dengyuxing/git/github.com/gpustack/gpustack/dist/gpustack-0.0.0-py3-none-any.whl' }
+# gpustack = { path = 'c:\Users\admin\test-python\gpustack\dist\gpustack-0.0.0-py3-none-any.whl' }
 # gpustack = { version = "0.6.1", extras = ["audio"] }
+gpustack = { git = "https://github.com/gpustack/gpustack.git", branch = "main", extras = ["audio"] }
 
 PySide6-Essentials="~6.8"
 platformdirs = "^4.3.8"

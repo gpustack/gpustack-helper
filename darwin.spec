@@ -1,17 +1,9 @@
 # -*- mode: python ; coding: utf-8 -*-
 from PyInstaller.utils.hooks import collect_all
-from importlib.resources import files
-from gpustack_helper.tools import download
+from gpustack_helper.tools import download, get_package_dir
 import os
 
 app_name = 'GPUStack'
-
-def get_package_dir(package_name: str) -> str:
-    paths = package_name.rsplit('.', 1)
-    if len(paths) == 1:
-        return str(files(package_name))
-    package, subpackage = paths
-    return str(files(package).joinpath(subpackage))
 
 datas = [
   (get_package_dir('gpustack.migrations'), './gpustack/migrations'),
@@ -27,7 +19,6 @@ download()
 
 binaries = []
 hiddenimports = []
-# tmp_ret = collect_all('aiosqlite', 'gpustack')
 tmp_ret = collect_all('aiosqlite')
 datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 

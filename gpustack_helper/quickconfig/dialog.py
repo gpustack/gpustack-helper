@@ -21,7 +21,8 @@ from gpustack_helper.quickconfig.common import (
 )
 from gpustack_helper.quickconfig.general import GeneralConfigPage
 from gpustack_helper.quickconfig.envvar import EnvironmentVariablePage
-from gpustack_helper.status import Status, state
+from gpustack_helper.status import Status
+from gpustack_helper.services.abstract_service import AbstractService as service
 
 list_widget_style = """
     /* 整体列表样式 */
@@ -145,11 +146,11 @@ class QuickConfig(QDialog):
         save.clicked.connect(self.save)
 
         @Slot()
-        def on_state_changed(new_state: state):
-            if new_state == state.STARTED or new_state == state.TO_SYNC:
+        def on_state_changed(new_state: service.State):
+            if new_state == service.State.STARTED or new_state == service.State.TO_SYNC:
                 ok.setText("Restart")
                 ok.setEnabled(True)
-            elif new_state == state.STOPPED:
+            elif new_state == service.State.STOPPED:
                 ok.setText("Start")
                 ok.setEnabled(True)
             else:
@@ -165,10 +166,12 @@ class QuickConfig(QDialog):
         config = self.cfg.user_gpustack_config
         super().showEvent(event)
         self.signalOnShow.emit(self.cfg, config)
+        self.raise_()
+        self.activateWindow()
 
     def save_and_start(self):
         self.save()
-        self.status.status = state.STARTING if self.status.status == state.STOPPED else state.RESTARTING
+        self.status.status = service.State.STARTING if self.status.status == service.State.STOPPED else service.State.RESTARTING
 
     def save(self):
         # 处理ButtonGroup的状态，当选择不是 Server + Worker 时清空输入

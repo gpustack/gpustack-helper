@@ -5,10 +5,19 @@ import stat
 from typing import Dict
 from gpustack.worker.tools_manager import ToolsManager, BUILTIN_LLAMA_BOX_VERSION
 from gpustack.utils.platform import system, arch, get_executable_suffix as exe, DeviceTypeEnum
+from importlib.resources import files
 
 LLAMA_BOX_VERSION = os.getenv("LLAMA_BOX_VERSION", BUILTIN_LLAMA_BOX_VERSION)
 LLAMA_BOX_DOWNLOAD_REPO = os.getenv("LLAMA_BOX_DOWNLOAD_REPO", "gpustack/llama-box")
 PREFERRED_BASE_URL = os.getenv("PREFERRED_BASE_URL", None)
+
+def get_package_dir(package_name: str) -> str:
+    paths = package_name.rsplit('.', 1)
+    if len(paths) == 1:
+        return str(files(package_name))
+    package, subpackage = paths
+    return str(files(package).joinpath(subpackage))
+
 
 def get_toolkit_name(device: str) -> str:
     # Get the toolkit based on the device type.

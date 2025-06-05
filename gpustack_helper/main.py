@@ -10,7 +10,7 @@ from PySide6.QtWidgets import (
     QMenu,
     QWidget
 )
-from PySide6.QtGui import QIcon, QAction, QDesktopServices
+from PySide6.QtGui import QAction, QDesktopServices
 from PySide6.QtCore import Slot, QUrl
 from typing import Dict, Any, List
 import multiprocessing
@@ -22,9 +22,10 @@ from gpustack_helper.defaults import (
 )
 from gpustack_helper.config import HelperConfig
 from gpustack_helper.quickconfig.dialog  import QuickConfig
-from gpustack_helper.status import Status, state
+from gpustack_helper.status import Status
 from gpustack_helper.common import create_menu_action, show_warning
 from gpustack_helper.icon import get_icon
+from gpustack_helper.services.abstract_service import AbstractService as service
 
 logger = logging.getLogger(__name__)
 
@@ -125,19 +126,22 @@ class Configuration():
         if token:
             clickboard.setText(token)
     
-    @Slot(state)
-    def on_status_changed(self, state: state):
-        self.copy_token.setEnabled(state == state.STARTED or state == state.TO_SYNC)
+    @Slot(service.State)
+    def on_status_changed(self, state: service.State):
+        self.copy_token.setEnabled(state == service.State.STARTED or state == service.State.TO_SYNC)
 
     def is_first_boot(self) -> bool:
         return not os.path.exists(self.cfg.filepath)
 
 def main():
+    if sys.platform == 'win32':
+        from gpustack_helper.admin_prompt_win import check_and_prompt_admin
+        check_and_prompt_admin()
     parser = argparse.ArgumentParser(description='GPUStack Helper')
-    parser.add_argument('--data-dir', type=str, default=None, help='数据目录')
-    parser.add_argument('--config-path', type=str, default=None, help='helper 配置文件路径')
-    parser.add_argument('--debug', action='store_true', help='启用调试模式')
-    parser.add_argument('--binary-path', type=str, default=None, help='GPUStack 二进制文件路径')
+    parser.add_argument('--config', default=None, type=str, help="GPUStack helper config path")
+    parser.add_argument('--debug', default=None, action='store_true', help="Enable debug logs")
+    parser.add_argument('--data-dir', default=None, type=str, help="The GPUStack data dir path for debugging")
+    parser.add_argument('--binary-path', default=None, type=str, help="The GPUStack Binary Path")
     args, _ = parser.parse_known_args()
     if args.debug:
         logging.basicConfig(level=logging.DEBUG)
@@ -150,8 +154,12 @@ def main():
     add_signal_handlers()
     if sys.platform != 'win32':
         signal.signal(signal.SIGINT, signal.SIG_DFL)
+    config_path = getattr(args, 'config_path', None)
+    data_dir = getattr(args, 'data_dir', None)
+    binary_path = getattr(args, 'binary_path', None)
+    debug = getattr(args, 'debug', False)
 
-    cfg = HelperConfig(args.config_path, args.data_dir, args.binary_path, debug= args.debug)
+    cfg = HelperConfig(config_path, data_dir, binary_path, debug)
 
     # 创建系统托盘图标
     normal_icon = get_icon(False)
@@ -163,8 +171,8 @@ def main():
     status = Status(menu, cfg)
     
     @Slot()
-    def set_tray_icon(state: state):
-        if state == state.STARTED or state == state.TO_SYNC:
+    def set_tray_icon(state: service.State):
+        if state == service.State.STARTED or state == service.State.TO_SYNC:
             icon = normal_icon
         else:
             icon = disabled_icon
@@ -177,8 +185,8 @@ def main():
     menu.addSeparator()
     
     @Slot()
-    def console_on_status_changed(state: state):
-        open_gpustack.setEnabled(state == state.STARTED or state == state.TO_SYNC)
+    def console_on_status_changed(state: service.State):
+        open_gpustack.setEnabled(state == service.State.STARTED or state == service.State.TO_SYNC)
     status.status_signal.connect(console_on_status_changed)
 
     @Slot()

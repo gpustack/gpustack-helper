@@ -150,10 +150,11 @@ class HelperConfig(_FileConfigModel, _HelperConfig):
         return self._debug
 
     def __init__(self, 
-                 filepath: Optional[str], 
-                 data_dir: Optional[str], 
-                 binary_path: Optional[str],
-                 debug: bool = False,
+                 /,
+                 filepath: Optional[str] = None, 
+                 data_dir: Optional[str] = None, 
+                 binary_path: Optional[str] = None,
+                 debug: Optional[bool] = False,
                  **kwargs):
         if filepath is None:
             filepath = os.path.join(_default_path(default_data_dir,data_dir), helper_config_file_name)
