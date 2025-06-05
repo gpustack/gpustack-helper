@@ -1,18 +1,17 @@
 # -*- mode: python ; coding: utf-8 -*-
 from PyInstaller.utils.hooks import collect_all
 from importlib.resources import files
-from importlib.abc import Traversable
+from gpustack_helper.tools import download
 import os
 
 app_name = 'GPUStack'
 
 def get_package_dir(package_name: str) -> str:
-    """获取包的目录路径（兼容开发模式、PyInstaller 和 zip 包）"""
-    pkg_path: Traversable = files(package_name)
-    if hasattr(pkg_path, '_paths'):
-        # 如果是开发模式或PyInstaller打包的目录
-        return pkg_path._paths[0]
-    return pkg_path
+    paths = package_name.rsplit('.', 1)
+    if len(paths) == 1:
+        return str(files(package_name))
+    package, subpackage = paths
+    return str(files(package).joinpath(subpackage))
 
 datas = [
   (get_package_dir('gpustack.migrations'), './gpustack/migrations'),
@@ -22,6 +21,9 @@ datas = [
   (os.path.join(get_package_dir('gpustack.detectors.fastfetch'),'*.jsonc'), './gpustack/detectors/fastfetch/'),
   ('./tray_icon.png', './'),
 ]
+
+# keep it for testing. Will be removed if ci is added.
+download()
 
 binaries = []
 hiddenimports = []
