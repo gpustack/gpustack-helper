@@ -135,6 +135,8 @@ class QuickConfig(QDialog):
         right_layout.setContentsMargins(0,0,20,20)
         main_layout.addWidget(right_widget)
 
+        self.setWindowFlags(self.windowFlags() | Qt.WindowType.WindowStaysOnTopHint)
+
     def config_confirm(self) -> QDialogButtonBox:
         # Buttons
         buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Save |QDialogButtonBox.StandardButton.Cancel)
