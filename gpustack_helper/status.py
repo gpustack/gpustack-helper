@@ -3,7 +3,7 @@ from PySide6.QtWidgets import QMenu
 import socket
 from os.path import abspath
 from PySide6.QtGui import QAction, QActionGroup
-from PySide6.QtCore import QTimer, Slot, Signal, QProcess, QThread
+from PySide6.QtCore import Slot, Signal, QProcess, QThread
 from typing import Dict, Optional, Tuple, Union
 from gpustack_helper.config import HelperConfig
 from gpustack_helper.common import create_menu_action, show_warning
@@ -31,7 +31,7 @@ class Status(QMenu):
     manual: QAction
     foreground: QAction
     daemon: QAction
-    timer: QTimer
+
     qprocess: Optional[Union[QProcess, QThread]] = None
 
     service_class: service = get_service_class()
@@ -56,8 +56,6 @@ class Status(QMenu):
         self.update_menu_status()
         self.update_title()
         # functions
-        self.timer = QTimer(self)
-        self.timer.timeout.connect(self.update_menu_status)
         self.status_signal.connect(self.on_status_changed)
         # QProcess 实例
         self.qprocess = None
@@ -133,9 +131,6 @@ class Status(QMenu):
     def restart_action(self):
         self.restart.setDisabled(True)
         self.status = service.State.RESTARTING
-
-    def start_load_status(self):
-        self.timer.start(2000)
     
     @Slot()
     def update_menu_status(self):

@@ -11,7 +11,7 @@ from PySide6.QtWidgets import (
     QWidget
 )
 from PySide6.QtGui import QAction, QDesktopServices
-from PySide6.QtCore import Slot, QUrl
+from PySide6.QtCore import Slot, QUrl, QTimer
 from typing import Dict, Any, List
 import multiprocessing
 from gpustack_helper.databinder import DataBinder
@@ -201,6 +201,7 @@ def main():
     # 打开日志
     log_action = create_menu_action("显示日志", menu)
     log_action.triggered.connect(open_log_dir)
+    log_action.setDisabled(True)
     menu.addSeparator()
     # 添加“关于”菜单项
     about_action = QAction('关于', menu)
@@ -214,9 +215,19 @@ def main():
     menu.addAction(exit_action)
 
     tray_icon.setContextMenu(menu)
-    status.start_load_status()
-    tray_icon.show()
+    timer: QTimer = QTimer(menu)
+    @Slot()
+    def interval_check():
+        status.update_menu_status()
+        if os.path.exists(log_file_path):
+            log_action.setEnabled(True)
+        else:
+            log_action.setDisabled(True)
+    timer.timeout.connect(interval_check)
+    timer.start(2000)
 
+    tray_icon.show()
+    
     if configure.is_first_boot():
         configure.quick_config_dialog.show()
 
