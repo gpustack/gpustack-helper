@@ -83,7 +83,8 @@ class Status(QMenu):
                     self.status = state_to_change[1]
                 else:
                     stderr = bytes(self.qprocess.readAllStandardError()).decode()
-                    logger.error(f"服务进程失败: {stderr}")
+                    stdout = bytes(self.qprocess.readAllStandardOutput()).decode()
+                    logger.error(f"服务进程失败: stdout: {stdout} stderr: {stderr}")
                     self.status = state_to_change[0]
                 self.qprocess.deleteLater()
                 self.qprocess = None

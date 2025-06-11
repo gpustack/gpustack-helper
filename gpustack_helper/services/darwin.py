@@ -40,9 +40,18 @@ def get_start_script(cfg: HelperConfig, restart: bool = False) -> str:
     )
     copy_script = f"mkdir -p '{dirname(target_path)}'; {copy_script}" if len(files_copy) != 0 else None
     link_script = f"rm -f '{plist_path}'; ln -sf '{target_path}' '{plist_path}'" if not exists(plist_path) or not islink(plist_path) or os.readlink(plist_path) != target_path or copy_script is not None else None
-    register_command = f"launchctl bootstrap system {plist_path}" if not restart else None
-    start_command = f"launchctl kickstart {'-k ' if restart else ''}{service_id}"
-    joined_script = ";".join(filter(None, [copy_script, link_script, register_command, start_command]))
+    stop_command = f"launchctl bootout {service_id}" if restart else None
+    wait_for_stopped = f'while true; do launchctl print {service_id} >/dev/null 2>&1; [ $? -eq 113 ] && break; sleep 0.5; done' if restart else None
+    register_command = f"launchctl bootstrap system {plist_path}"
+    start_command = f"launchctl kickstart {service_id}"
+    joined_script = ";".join(filter(None, [
+        copy_script, 
+        link_script, 
+        stop_command, 
+        wait_for_stopped, 
+        register_command, 
+        start_command,
+        ]))
     logger.debug(f"准备以admin权限运行该shell脚本 :\n{joined_script}")
     return f"""do shell script "{joined_script}" with prompt "GPUStack 需要启动后台服务" with administrator privileges"""
 
