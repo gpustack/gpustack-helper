@@ -27,7 +27,7 @@ helper = Analysis(
     ['gpustack_helper/main.py'],
     pathex=[],
     binaries=binaries,
-    datas=datas,
+    datas=[],
     hiddenimports=hiddenimports,
     hookspath=[],
     hooksconfig={},
@@ -58,7 +58,7 @@ helper_exe = EXE(
 )
 
 gpustack = Analysis(
-    [os.path.join(get_package_dir('gpustack'),'main.py')],
+    ['gpustack_helper/binary_entrypoint.py'],
     pathex=[],
     binaries=binaries,
     datas=datas,
@@ -89,9 +89,28 @@ gpustack_exe = EXE(
     entitlements_file=None,
 )
 
+vox_box_exe = EXE(
+    gpustack_pyz,
+    gpustack.scripts,
+    [],
+    exclude_binaries=True,
+    name='vox-box',
+    debug=False,
+    bootloader_ignore_signals=False,
+    strip=False,
+    upx=True,
+    console=False,
+    disable_windowed_traceback=False,
+    argv_emulation=True,
+    target_arch=None,
+    codesign_identity=None,
+    entitlements_file=None,
+)
+
 coll = COLLECT(
     helper_exe,
     gpustack_exe,
+    vox_box_exe,
     helper.binaries,
     helper.datas,
     gpustack.binaries,
