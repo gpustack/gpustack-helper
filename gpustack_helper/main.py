@@ -53,6 +53,8 @@ def open_browser(parent: QWidget, cfg: HelperConfig) -> None:
         if port is None or port == 0:
             port = 443 if is_tls else 80
         hostname = config.host if config.host is not None and config.host != '' else 'localhost'
+        if hostname == '0.0.0.0':
+            hostname = 'localhost'
         url = QUrl(f"http{'s' if is_tls else ''}://{hostname}:{port}")
     
     # 使用默认浏览器打开URL
