@@ -147,10 +147,10 @@ class Configuration:
 
     @Slot()
     def copy_token_to_clipboard(self):
-        clickboard = QApplication.clipboard()
+        clipboard = QApplication.clipboard()
         gpustack_config = self.cfg.user_gpustack_config
         if gpustack_config.token is not None:
-            clickboard.setText(gpustack_config.token)
+            clipboard.setText(gpustack_config.token)
             return
 
         token_path = os.path.join(self.cfg.active_data_dir, "token")
@@ -160,7 +160,7 @@ class Configuration:
         with open(token_path, "r", encoding="utf-8") as f:
             token = f.read().strip()
         if token:
-            clickboard.setText(token)
+            clipboard.setText(token)
 
     def is_first_boot(self) -> bool:
         return not os.path.exists(self.cfg.filepath)
