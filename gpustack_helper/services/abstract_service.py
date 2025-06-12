@@ -5,6 +5,7 @@ from typing import Union
 
 from gpustack_helper.config import HelperConfig
 
+
 class AbstractService(ABC):
     """
     Base class for all services in the application.
@@ -19,13 +20,17 @@ class AbstractService(ABC):
         TO_SYNC = ("to_sync", "需要同步")
         UNKNOWN = ("unknown", "未知")
         STARTED = ("started", "运行中")
+
         def __init__(self, state, display_text):
             self.state = state  # 内部状态值
             self.display_text = display_text  # 显示文本
 
         @classmethod
         def get_display_text(cls, state):
-            return next((status.display_text for status in cls if status.state == state), "未知状态")
+            return next(
+                (status.display_text for status in cls if status.state == state),
+                "未知状态",
+            )
 
     @classmethod
     @abstractmethod
@@ -47,18 +52,17 @@ class AbstractService(ABC):
         """
         Restart the service. Override this method in subclasses to provide specific restart logic.
         """
-    
+
     @classmethod
     @abstractmethod
     def get_current_state(cls, cfg: HelperConfig) -> State:
         """
         Get the current state of the service. Override this method in subclasses to provide specific state retrieval logic.
         """
-    
+
     @classmethod
     @abstractmethod
     def migrate(cls, cfg: HelperConfig) -> None:
         """
         Migrate the service if necessary. Override this method in subclasses to provide specific migration logic.
         """
-

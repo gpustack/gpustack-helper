@@ -3,6 +3,9 @@ from PyInstaller.utils.hooks import collect_all
 from gpustack_helper.tools import download, get_package_dir
 import os
 
+# 
+version = os.getenv('GIT_VERSION', '0.99.0.0').removeprefix('v')
+version_short = '.'.join(version.split('.')[0:3])
 app_name = 'GPUStack'
 
 datas = [
@@ -130,8 +133,8 @@ app = BUNDLE(
     info_plist={
         'CFBundleName': app_name,
         'CFBundleDisplayName': app_name,
-        'CFBundleVersion': '1.0.0',
-        'CFBundleShortVersionString': '1.0',
+        'CFBundleVersion': version,
+        'CFBundleShortVersionString': version_short,
         'NSHumanReadableCopyright': 'Copyright © 2025 Seal, Inc.',
         'LSMinimumSystemVersion': '14.0',  # 最低系统要求
         'NSPrincipalClass': 'NSApplication',

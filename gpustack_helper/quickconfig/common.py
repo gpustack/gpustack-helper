@@ -1,5 +1,14 @@
-from typing import Optional, Dict, Any, BinaryIO, List, Tuple, Union
-from PySide6.QtWidgets import QLabel, QLineEdit, QSizePolicy, QSpinBox, QWidget, QLayout, QGroupBox, QFormLayout
+from typing import List, Tuple, Union
+from PySide6.QtWidgets import (
+    QLabel,
+    QLineEdit,
+    QSizePolicy,
+    QSpinBox,
+    QWidget,
+    QLayout,
+    QGroupBox,
+    QFormLayout,
+)
 from PySide6.QtCore import Qt, SignalInstance
 from gpustack_helper.databinder import DataBinder
 from gpustack_helper.config import HelperConfig, CleanConfig
@@ -18,31 +27,46 @@ group_box_style = """
     }
 """
 
-def fixed_titled_input(title: str) -> Tuple[QLabel,QLineEdit]:
+
+def fixed_titled_input(title: str) -> Tuple[QLabel, QLineEdit]:
     label = QLabel(title)
-    label.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)  # 固定标签大小
+    label.setSizePolicy(
+        QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed
+    )  # 固定标签大小
     input = QLineEdit()
-    input.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)  # 输入框横向扩展
-    return (label,input)
+    input.setSizePolicy(
+        QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed
+    )  # 输入框横向扩展
+    return (label, input)
+
 
 def fixed_titled_port_input(title: str) -> Tuple[QLabel, QSpinBox]:
     # validator = QIntValidator(0, 65535)  # 端口范围
     label = QLabel(title)
-    label.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)  # 固定标签大小
+    label.setSizePolicy(
+        QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed
+    )  # 固定标签大小
     input = QSpinBox()
-    input.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)  # 输入框横向扩展
+    input.setSizePolicy(
+        QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed
+    )  # 输入框横向扩展
     input.setRange(0, 65535)  # 设置端口范围
     input.setButtonSymbols(QSpinBox.ButtonSymbols.NoButtons)  # 移除上下按钮
     return (label, input)
+
 
 def wrap_layout(layout: QLayout) -> QWidget:
     rtn = QWidget()
     rtn.setLayout(layout)
     return rtn
 
-def create_stand_box(title: str, widgets: List[Union[QWidget, QLayout, Tuple[QLabel,Union[QLineEdit, QSpinBox]]]]) ->QGroupBox:
+
+def create_stand_box(
+    title: str,
+    widgets: List[Union[QWidget, QLayout, Tuple[QLabel, Union[QLineEdit, QSpinBox]]]],
+) -> QGroupBox:
     group = QGroupBox(title)
-    group.setSizePolicy(QSizePolicy.Policy.Preferred,QSizePolicy.Policy.Fixed)
+    group.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
     group.setStyleSheet(group_box_style)
     layout = QFormLayout(
         fieldGrowthPolicy=QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow,
@@ -52,8 +76,12 @@ def create_stand_box(title: str, widgets: List[Union[QWidget, QLayout, Tuple[QLa
     layout.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
     group.setLayout(layout)
     for widget in widgets:
-        if isinstance(widget, tuple) and len(widget) == 2 and \
-           isinstance(widget[0], QLabel) and isinstance(widget[1], (QLineEdit, QSpinBox)):
+        if (
+            isinstance(widget, tuple)
+            and len(widget) == 2
+            and isinstance(widget[0], QLabel)
+            and isinstance(widget[1], (QLineEdit, QSpinBox))
+        ):
             label, input = widget
             layout.addRow(label, input)
         elif isinstance(widget, (QWidget, QLayout)):
@@ -61,6 +89,7 @@ def create_stand_box(title: str, widgets: List[Union[QWidget, QLayout, Tuple[QLa
     group.adjustSize()
     group.setFixedHeight(group.sizeHint().height())
     return group
+
 
 class DataBindWidget(QWidget):
     helper_binders: List[DataBinder] = None
@@ -79,6 +108,7 @@ class DataBindWidget(QWidget):
             binder.load_config.emit(config)
         for binder in self.helper_binders:
             binder.load_config.emit(cfg)
+
     @abstractmethod
     def on_save(self, cfg: HelperConfig, config: CleanConfig) -> None:
         pass

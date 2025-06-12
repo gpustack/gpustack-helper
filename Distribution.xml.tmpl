@@ -13,7 +13,7 @@
         <pkg-ref id="ai.gpustack.pkg"/>
     </choice>
 
-    <pkg-ref id="ai.gpustack.pkg" version="1.0" auth="Root">gpustack.pkg</pkg-ref>
+    <pkg-ref id="ai.gpustack.pkg" version="${GIT_VERSION}" auth="Root">${PACKAGE_NAME}</pkg-ref>
 
     <installation-check script="InstallationCheck()"/>
     <script>

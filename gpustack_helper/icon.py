@@ -1,6 +1,7 @@
 from PySide6.QtGui import QIcon, QPixmap
 from gpustack_helper.defaults import icon_path
 
+
 def create_disabled_icon(pixmap: QPixmap) -> QPixmap:
     image = pixmap.toImage()
     for x in range(image.width()):
@@ -10,6 +11,7 @@ def create_disabled_icon(pixmap: QPixmap) -> QPixmap:
                 color.setRgb(128, 128, 128, color.alpha())
                 image.setPixelColor(x, y, color)
     return QPixmap.fromImage(image)
+
 
 def create_white_icon(pixmap: QPixmap) -> QPixmap:
     image = pixmap.toImage()
@@ -21,6 +23,7 @@ def create_white_icon(pixmap: QPixmap) -> QPixmap:
                 image.setPixelColor(x, y, color)
     return QPixmap.fromImage(image)
 
+
 def get_icon(disabled: bool = False) -> QIcon:
     pixmap = QPixmap(icon_path)
     if disabled:
@@ -30,4 +33,3 @@ def get_icon(disabled: bool = False) -> QIcon:
     icon = QIcon(pixmap)
     icon.setIsMask(not disabled)
     return icon
-

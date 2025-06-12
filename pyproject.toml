@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "gpustack-helper"
-version = "0.1.0"
+version = "0.0.0"
 description = "The GPUStack Installer is a helper tool for installing and configuring GPUStack."
 authors = ["GPUStack Authors <contact@gpustack.ai>"]
 license = "Apache 2.0"
@@ -16,6 +16,9 @@ platformdirs = "^4.3.8"
 
 [tool.poetry.group.dev.dependencies]
 pyinstaller = "^6.13.0"
+poetry-dynamic-versioning = "^1.8.2"
+pre-commit = "^4.2.0"
+black = "^24.4.2"
 
 [build-system]
 requires = ["poetry-core"]
@@ -23,3 +26,11 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
 helper = "gpustack_helper.main:main"
+
+[tool.poetry-dynamic-versioning]
+enable = true
+
+[tool.black]
+line-length = 88
+target-version = ['py310']
+skip-string-normalization = true
