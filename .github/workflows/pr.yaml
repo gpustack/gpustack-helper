@@ -1,7 +1,6 @@
-name: CI
+name: PR
 
 on:
-  workflow_dispatch:
   pull_request:
     branches:
       - main
@@ -14,18 +13,7 @@ on:
       - "**.png"
       - "**.jpg"
       - "**.gif"
-  push:
-    branches:
-      - main
-      - "v*-dev"
-    paths-ignore:
-      - "mkdocs.yml"
-      - "docs/**"
-      - "**.md"
-      - "**.mdx"
-      - "**.png"
-      - "**.jpg"
-      - "**.gif"
+
 jobs:
   ci-macos:
     uses: ./.github/workflows/ci-common.yaml

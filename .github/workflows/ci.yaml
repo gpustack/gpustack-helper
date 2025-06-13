@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - "v*-dev"
+    paths-ignore:
+      - "mkdocs.yml"
+      - "docs/**"
+      - "**.md"
+      - "**.mdx"
+      - "**.png"
+      - "**.jpg"
+      - "**.gif"
+jobs:
+  ci-macos:
+    uses: ./.github/workflows/ci-common.yaml
+    with:
+      python-version: '3.10'
+      upload-artifacts: true
+  release-to-cos:
+    runs-on: ubuntu-latest
+    needs: ci-macos
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Setup Version
+        id: setup_version
+        run: |
+          make export_version
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          pattern: build-*
+          merge-multiple: true
+      - name: Copy to Tencent COS
+        uses: ./.github/actions/copy-to-cos.yaml
+        with:
+          tencent-secret-id: "${{ secrets.CI_TECENTCOS_SECRET_ID }}"
+          tencent-secret-key: "${{ secrets.CI_TECENTCOS_SECRET_KEY }}"
+          tencent-cos-region: 'ap-guangzhou'
+          tencent-cos-bucket: 'gpustack-installer-1303613262'
+          sync_file_path: dist
+          tencent-cos-path-prefix: "dev/${{ steps.setup_version.outputs.GIT_VERSION }}/"
