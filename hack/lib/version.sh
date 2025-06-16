@@ -87,7 +87,14 @@ function gpustack::version::get_version_vars() {
       LAST_TAG="v0.0.0.0"
     fi
     # 保留前两位，第三位+1，第四位用GITHUB_RUN_NUMBER
-    if [[ "${LAST_TAG}" =~ ^v([0-9]+)\.([0-9]+)\.(\d+)(\.(\d+))?$ ]]; then
+    if [[ "${LAST_TAG}" =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+      major="${BASH_REMATCH[1]}"
+      minor="${BASH_REMATCH[2]}"
+      patch="${BASH_REMATCH[3]}"
+      patch=$((patch + 1))
+      build="${GITHUB_RUN_NUMBER:-999}"
+      GIT_VERSION="v${major}.${minor}.${patch}.${build}"
+    elif [[ "${LAST_TAG}" =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
       major="${BASH_REMATCH[1]}"
       minor="${BASH_REMATCH[2]}"
       patch="${BASH_REMATCH[3]}"
