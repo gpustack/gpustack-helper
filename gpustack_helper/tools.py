@@ -121,6 +121,7 @@ def move_and_rename(file_name: str, source_binary: Path, target_dir: Path) -> st
         st = os.stat(source_binary)
         os.chmod(source_binary, st.st_mode | stat.S_IEXEC)
     shutil.move(source_binary, target_dir / target_file_name)
+    return target_file_name
 
 
 def download_llama_box(manager: ToolsManager):
