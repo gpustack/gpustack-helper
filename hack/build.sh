@@ -65,7 +65,7 @@ function cleanup_ui() {
 }
 
 function build() {
-  poetry run pyinstaller darwin.spec -y
+  GIT_VERSION=${GIT_VERSION} poetry run pyinstaller darwin.spec -y
 }
 
 function prepare_dependencies() {
