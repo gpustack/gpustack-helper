@@ -49,10 +49,10 @@ def parse_service_status() -> Dict[str, Any]:
 def get_start_script(cfg: HelperConfig, restart: bool = False) -> str:
     gpustack_config = cfg.user_gpustack_config
     target_path = abspath(cfg.active_config_path)
-    if not exists(cfg.filepath):
-        cfg.update_with_lock()
-    if not exists(gpustack_config.filepath):
-        gpustack_config.update_with_lock()
+    # update to ensure the config is up-to-date
+    cfg.update_with_lock()
+    gpustack_config.update_with_lock()
+
     files_copy: List[Tuple[str, str]] = [(abspath(cfg.filepath), target_path)]
     if gpustack_config.filepath != gpustack_config.active_config_path:
         files_copy.append(

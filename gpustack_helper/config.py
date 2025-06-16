@@ -204,7 +204,7 @@ class HelperConfig(_FileConfigModel, _HelperConfig):
             self._reload()
 
     def update_with_lock(self, **kwargs):
-        kwargs.setdefault("ProgramArguments", self.program_args_defaults())
+        kwargs['ProgramArguments'] = self.program_args_defaults()
         super().update_with_lock(**kwargs)
 
     def program_args_defaults(self) -> List[str]:
