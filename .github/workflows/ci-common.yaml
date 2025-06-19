@@ -38,8 +38,19 @@ jobs:
           key: ${{ runner.os }}-poetry-${{ inputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
           restore-keys: |
             ${{ runner.os }}-poetry-${{ inputs.python-version }}-
+      - name: Cache OpenFST
+        id: cache-openfst
+        uses: actions/cache@v3
+        with:
+          path: |
+            /opt/homebrew/lib/libfst*
+            /opt/homebrew/lib/fst
+            /opt/homebrew/include/fst
+          key: ${{ runner.os }}-openfstlib-${{ hashFiles('hack/build-openfst.sh') }}-${{ hashFiles('hack/patch/openfst.patch') }}
       - name: Run CI build
         id: run_ci
+        env:
+          INSTALL_PREFIX: /opt/homebrew
         run: |
           make ci
           make export_version
