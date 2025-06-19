@@ -34,9 +34,12 @@ datas = [
 
 # keep it for testing. Will be removed if ci is added.
 download()
-binaries = [
-    ('./openfst/build/lib/*', './'),
-]
+binaries = []
+if os.getenv('INSTALL_PREFIX', None) is None:
+    binaries += [
+        ('./openfst/build/lib/*', './'),
+    ]
+
 hiddenimports = [
     'tn', 'itn', '_pywrapfst'
 ]

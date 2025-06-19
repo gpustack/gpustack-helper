@@ -28,23 +28,23 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Setup Version
-        id: setup_version
-        run: |
-          make export_version
+      # - name: Setup Version
+      #   id: setup_version
+      #   run: |
+      #     make export_version
       - name: Download Artifacts
         uses: actions/download-artifact@v4
         with:
           path: dist
           pattern: build-*
           merge-multiple: true
-      - name: Copy to Tencent COS
-        uses: ./.github/actions/copy-to-cos
-        with:
-          tencent-secret-id: "${{ secrets.CI_TECENTCOS_SECRET_ID }}"
-          tencent-secret-key: "${{ secrets.CI_TECENTCOS_SECRET_KEY }}"
-          tencent-cos-region: 'ap-guangzhou'
-          tencent-cos-bucket: 'gpustack-installer-1303613262'
-          sync-file-path: dist
-          tencent-cos-path-prefix: "dev/${{ steps.setup_version.outputs.GIT_VERSION }}/"
-          dry-run: false
+      # - name: Copy to Tencent COS
+      #   uses: ./.github/actions/copy-to-cos
+      #   with:
+      #     tencent-secret-id: "${{ secrets.CI_TECENTCOS_SECRET_ID }}"
+      #     tencent-secret-key: "${{ secrets.CI_TECENTCOS_SECRET_KEY }}"
+      #     tencent-cos-region: 'ap-guangzhou'
+      #     tencent-cos-bucket: 'gpustack-installer-1303613262'
+      #     sync-file-path: dist
+      #     tencent-cos-path-prefix: "dev/${{ steps.setup_version.outputs.GIT_VERSION }}/"
+      #     dry-run: false

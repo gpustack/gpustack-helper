@@ -4,11 +4,18 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
+DEBUG="${DEBUG:-}"
+if [[ -n "${DEBUG}" ]]; then
+  set -o xtrace
+fi
+
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 source "${ROOT_DIR}/hack/lib/init.sh"
 
+PREFIX="${INSTALL_PREFIX:-${ROOT_DIR}/openfst/build}"
+
 function download_and_build(){
-  if [ -d "${ROOT_DIR}/openfst/build/lib" ] && [ -d "${ROOT_DIR}/openfst/build/include" ]; then
+  if ls "${PREFIX}/lib/libfst"* 1>/dev/null 2>&1 && ls "${PREFIX}/lib/fst/"* 1>/dev/null 2>&1 && [ -d "${PREFIX}/include/fst" ]; then
     gpustack::log::info "OpenFst already exists and built, skipping download."
     return
   fi
@@ -19,7 +26,7 @@ function download_and_build(){
   patch openfst/src/include/fst/bi-table.h < "${ROOT_DIR}/hack/patch/openfst.patch"
   pushd "${ROOT_DIR}/openfst"
   mkdir -p build
-  ./configure --disable-dependency-tracking --disable-silent-rules --prefix="${PWD}/build"  --enable-fsts --enable-compress --enable-grm --enable-special
+  ./configure --disable-dependency-tracking --disable-silent-rules --prefix="${PREFIX}"  --enable-fsts --enable-compress --enable-grm --enable-special
   make
   make install
   gpustack::log::info "OpenFst built and installed successfully."

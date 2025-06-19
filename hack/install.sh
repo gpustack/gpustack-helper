@@ -11,25 +11,22 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 # Include the common functions
 source "${ROOT_DIR}/hack/lib/init.sh"
 
+PREFIX="${INSTALL_PREFIX:-${ROOT_DIR}/openfst/build}"
+
 function download_deps() {
   if [[ -z "$(command -v poetry)" ]]; then
     pip install poetry==1.8.3
   fi
   poetry install
   if [[ "${POETRY_ONLY:-false}" == "false" ]]; then
-    pip install pre-commit==3.7.1
+    pip install pre-commit==4.2.0
     pre-commit install
   fi
 }
 
 gpustack::log::info "+++ DEPENDENCIES +++"
-if [ ! -d "${ROOT_DIR}/openfst/build/lib" ] || [ ! -d "${ROOT_DIR}/openfst/build/include" ]; then
-  gpustack::log::info "OpenFst not found, downloading and building..."
-  source "${ROOT_DIR}/hack/build-openfst.sh"
-else
-  gpustack::log::info "OpenFst already exists and built, skipping download."
-fi
-export LIBRARY_PATH="${ROOT_DIR}/openfst/build/lib:${LIBRARY_PATH:-}"
-export CPLUS_INCLUDE_PATH="${ROOT_DIR}/openfst/build/include:${CPLUS_INCLUDE_PATH:-}"
+source "${ROOT_DIR}/hack/build-openfst.sh"
+export LIBRARY_PATH="${PREFIX}/lib:${LIBRARY_PATH:-}"
+export CPLUS_INCLUDE_PATH="${PREFIX}/include:${CPLUS_INCLUDE_PATH:-}"
 download_deps
 gpustack::log::info "--- DEPENDENCIES ---"
