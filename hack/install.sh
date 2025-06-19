@@ -23,5 +23,13 @@ function download_deps() {
 }
 
 gpustack::log::info "+++ DEPENDENCIES +++"
+if [ ! -d "${ROOT_DIR}/openfst/build/lib" ] || [ ! -d "${ROOT_DIR}/openfst/build/include" ]; then
+  gpustack::log::info "OpenFst not found, downloading and building..."
+  source "${ROOT_DIR}/hack/build-openfst.sh"
+else
+  gpustack::log::info "OpenFst already exists and built, skipping download."
+fi
+export LIBRARY_PATH="${ROOT_DIR}/openfst/build/lib:${LIBRARY_PATH:-}"
+export CPLUS_INCLUDE_PATH="${ROOT_DIR}/openfst/build/include:${CPLUS_INCLUDE_PATH:-}"
 download_deps
 gpustack::log::info "--- DEPENDENCIES ---"

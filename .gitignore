@@ -161,3 +161,6 @@ test_*.py
 
 # macOS
 .DS_Store
+
+# openfst
+/openfst
