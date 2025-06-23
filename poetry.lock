@@ -1518,20 +1518,6 @@ files = [
 ]
 
 [[package]]
-name = "dunamai"
-version = "1.24.1"
-description = "Dynamic version generation"
-optional = false
-python-versions = ">=3.5"
-files = [
-    {file = "dunamai-1.24.1-py3-none-any.whl", hash = "sha256:4370e406d8ce195fc4b066b5c326bfa9adb269c4b8719b4e4fd90b63a2144bf7"},
-    {file = "dunamai-1.24.1.tar.gz", hash = "sha256:3aa3348f77242da8628b23f11e89569343440f0f912bcef32a1fa891cf8e7215"},
-]
-
-[package.dependencies]
-packaging = ">=20.9"
-
-[[package]]
 name = "editdistance"
 version = "0.8.1"
 description = "Fast implementation of the edit distance (Levenshtein distance)"
@@ -2223,7 +2209,7 @@ vllm = ["bitsandbytes (>=0.45.2,<0.46.0)", "mistral_common[opencv] (>=1.4.3,<2.0
 type = "git"
 url = "https://github.com/gpustack/gpustack.git"
 reference = "main"
-resolved_reference = "56bf30f199cb962cf67b2abcb41044033dbeb67b"
+resolved_reference = "d38a120a3db3dc89415a553b02c54be8750a5b08"
 
 [[package]]
 name = "greenlet"
@@ -4869,25 +4855,6 @@ dev = ["pre-commit", "tox"]
 testing = ["coverage", "pytest", "pytest-benchmark"]
 
 [[package]]
-name = "poetry-dynamic-versioning"
-version = "1.8.2"
-description = "Plugin for Poetry to enable dynamic versioning based on VCS tags"
-optional = false
-python-versions = "<4.0,>=3.7"
-files = [
-    {file = "poetry_dynamic_versioning-1.8.2-py3-none-any.whl", hash = "sha256:3758a0b12228230ce384fbb303948c5e405e1d33c3bbe1ba71144c15f5e7a8de"},
-    {file = "poetry_dynamic_versioning-1.8.2.tar.gz", hash = "sha256:d14de13d426ac28e98f4519aac7f4aa857e7b97ad9d7a4c72293377033065f44"},
-]
-
-[package.dependencies]
-dunamai = ">=1.23.0,<2.0.0"
-jinja2 = ">=2.11.1,<4"
-tomlkit = ">=0.4"
-
-[package.extras]
-plugin = ["poetry (>=1.2.0)"]
-
-[[package]]
 name = "pooch"
 version = "1.8.2"
 description = "A friend to fetch your data files"
@@ -7475,17 +7442,6 @@ files = [
 ]
 
 [[package]]
-name = "tomlkit"
-version = "0.13.3"
-description = "Style preserving TOML library"
-optional = false
-python-versions = ">=3.8"
-files = [
-    {file = "tomlkit-0.13.3-py3-none-any.whl", hash = "sha256:c89c649d79ee40629a9fda55f8ace8c6a1b42deb912b2a8fd8d942ddadb606b0"},
-    {file = "tomlkit-0.13.3.tar.gz", hash = "sha256:430cf247ee57df2b94ee3fbe588e71d362a941ebb545dec29b53961d61add2a1"},
-]
-
-[[package]]
 name = "torch"
 version = "2.7.1"
 description = "Tensors and Dynamic neural networks in Python with strong GPU acceleration"
@@ -8398,4 +8354,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.13"
-content-hash = "3f22087212b16a9954e8bc54abbaa00eedf0c8281c57f4c52035409e1505c033"
+content-hash = "9891b4478b0eb6f6800d3a8d310644f129a31cd45f57860e62459f15454f3a8d"

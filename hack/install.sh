@@ -17,6 +17,9 @@ function download_deps() {
   if [[ -z "$(command -v poetry)" ]]; then
     pip install poetry==1.8.3
   fi
+  if ! poetry self show plugins -n | grep -q dynamic-versioning; then
+    poetry self add poetry-dynamic-versioning
+  fi
   poetry install
   if [[ "${POETRY_ONLY:-false}" == "false" ]]; then
     pip install pre-commit==4.2.0
@@ -29,4 +32,5 @@ source "${ROOT_DIR}/hack/build-openfst.sh"
 export LIBRARY_PATH="${PREFIX}/lib:${LIBRARY_PATH:-}"
 export CPLUS_INCLUDE_PATH="${PREFIX}/include:${CPLUS_INCLUDE_PATH:-}"
 download_deps
+source "${ROOT_DIR}/hack/export_version.sh"
 gpustack::log::info "--- DEPENDENCIES ---"

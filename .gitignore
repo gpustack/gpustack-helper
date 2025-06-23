@@ -158,6 +158,8 @@ __pycache__/
 */ui/
 test_*.py
 /.gpustack-ui-downloaded
+/gpustack_helper/_version.py
+
 
 # macOS
 .DS_Store

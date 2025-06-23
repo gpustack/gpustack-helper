@@ -20,6 +20,8 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - name: Setup Dummy Version File
+        run: echo "__version__ = '0.0.0'" > gpustack_helper/_version.py
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -28,6 +30,8 @@ jobs:
         uses: snok/install-poetry@v1
         with:
           version: 1.8.3
+          plugins: |
+            poetry-dynamic-versioning
       - name: Cache dependencies
         uses: actions/cache@v4
         with:
@@ -53,7 +57,6 @@ jobs:
           INSTALL_PREFIX: /opt/homebrew
         run: |
           make ci
-          make export_version
       - name: upload-artifacts
         if: ${{ inputs.upload-artifacts }}
         uses: actions/upload-artifact@v4
