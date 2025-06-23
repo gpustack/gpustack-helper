@@ -1,0 +1,28 @@
+#!/bin/bash
+
+set -x
+
+function set_wired_limit() {
+    # check if iogpu is supported
+    if ! sysctl -a 2>/dev/null | grep -q '^iogpu.wired_limit_mb:'; then
+        return
+    fi
+    # Skipping setting wired_limit if set by user
+    # Skip setting wired_limit if it is already set to a non-zero value
+    if [ "$(sysctl -n iogpu.wired_limit_mb)" -ne 0 ]; then
+        return
+    fi
+    TOTAL_MEM_MB=$(($(sysctl -n hw.memsize) / 1024 / 1024))
+    # Calculate 85% and TOTAL_MEM_GB-5GB in MB
+    EIGHTY_FIVE_PERCENT=$((TOTAL_MEM_MB * 85 / 100))
+    MINUS_5GB=$((TOTAL_MEM_MB - 5120))
+    # Set WIRED_LIMIT_MB to higher value
+    if [ "$EIGHTY_FIVE_PERCENT" -gt "$MINUS_5GB" ]; then
+      WIRED_LIMIT_MB="$EIGHTY_FIVE_PERCENT"
+    else
+      WIRED_LIMIT_MB="$MINUS_5GB"
+    fi
+    sysctl -w iogpu.wired_limit_mb="$WIRED_LIMIT_MB"
+}
+
+set_wired_limit
