@@ -7,6 +7,7 @@ from typing import Dict, Any, List, Tuple
 from PySide6.QtCore import QProcess
 from gpustack_helper.config import HelperConfig
 from gpustack_helper.services.abstract_service import AbstractService
+from gpustack_helper.defaults import get_dac_filename, base_path
 
 logger = logging.getLogger(__name__)
 
@@ -90,6 +91,22 @@ def get_start_script(cfg: HelperConfig, restart: bool = False) -> str:
         or copy_script is not None
         else None
     )
+    # link target should be resources path of gpustack_helper and name would be dac filename
+    # link source should be the dac filename in the cfg.active_data_dir/root dir
+    target_home = os.path.join(cfg.active_data_dir, "root", '.cache', 'descript', 'dac')
+    dac_filename = get_dac_filename()
+    source_filename = os.path.join(base_path, dac_filename)
+    target_filename = os.path.join(target_home, dac_filename)
+    link_dac_script = (
+        f"rm -f '{target_filename}'; mkdir -p '{target_home}'; ln -s '{source_filename}' '{target_filename}'"
+        if exists(source_filename)
+        and (
+            not exists(target_filename)
+            or not islink(target_filename)
+            or os.readlink(target_filename) != source_filename
+        )
+        else None
+    )
     stop_command = f"launchctl bootout {service_id}" if restart else None
     wait_for_stopped = (
         f"while true; do launchctl print {service_id} >/dev/null 2>&1; [ $? -eq 113 ] && break; sleep 0.5; done"
@@ -104,6 +121,7 @@ def get_start_script(cfg: HelperConfig, restart: bool = False) -> str:
             [
                 copy_script,
                 link_script,
+                link_dac_script,
                 stop_command,
                 wait_for_stopped,
                 register_command,

@@ -7,6 +7,7 @@ from typing import Dict
 from gpustack.worker.tools_manager import ToolsManager, BUILTIN_LLAMA_BOX_VERSION
 from gpustack.utils.platform import system, arch, DeviceTypeEnum
 from importlib.resources import files
+from gpustack_helper.defaults import get_dac_filename, dac_download_link
 
 LLAMA_BOX = 'llama-box'
 LLAMA_BOX_VERSION = os.getenv("LLAMA_BOX_VERSION", BUILTIN_LLAMA_BOX_VERSION)
@@ -157,6 +158,27 @@ def download():
     except Exception as e:
         print(f"Error downloading tools: {e}")
         raise
+
+
+def download_dac(base_path: str) -> str:
+    filename = get_dac_filename()
+    download_link = dac_download_link()
+    if download_link is None:
+        raise ValueError(
+            f"Could not find model with filename {filename} in the DAC repository."
+        )
+    local_path = Path(base_path) / filename
+    if not local_path.exists():
+        import requests
+
+        response = requests.get(download_link)
+
+        if response.status_code != 200:
+            raise ValueError(
+                f"Could not download model. Received response code {response.status_code}"
+            )
+        local_path.write_bytes(response.content)
+    return str(local_path)
 
 
 if __name__ == "__main__":

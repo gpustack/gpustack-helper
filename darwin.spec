@@ -1,6 +1,6 @@
 # -*- mode: python ; coding: utf-8 -*-
 from PyInstaller.utils.hooks import collect_all, collect_data_files
-from gpustack_helper.tools import download, get_package_dir
+from gpustack_helper.tools import download, get_package_dir, download_dac
 import os
 import sys
 
@@ -18,6 +18,9 @@ version = os.getenv('GIT_VERSION', '0.99.0.0').removeprefix('v')
 version_short = '.'.join(version.split('.')[0:3])
 app_name = 'GPUStack'
 
+os.makedirs('./build', exist_ok=True)
+dac_path = download_dac('./build')
+
 datas = [
     (get_package_dir('gpustack.migrations'), './gpustack/migrations'),
     (get_package_dir('gpustack.ui'),'./gpustack/ui'),
@@ -29,7 +32,9 @@ datas = [
     *collect_data_files('typeguard', include_py_files=True),
     *collect_data_files('tn', include_py_files=True),
     *collect_data_files('itn', include_py_files=True),
+    *collect_data_files('audiotools'),
     (os.path.join(get_package_dir('whisper'), 'assets'), './whisper/assets'),
+    (dac_path, "./")
 ]
 
 # keep it for testing. Will be removed if ci is added.
@@ -44,16 +49,11 @@ hiddenimports = [
     'tn', 'itn', '_pywrapfst'
 ]
 
-aiosqlite = collect_all('aiosqlite')
-datas += aiosqlite[0]; binaries += aiosqlite[1]; hiddenimports += aiosqlite[2]
-cosyvoice = collect_all('cosyvoice')
-datas += cosyvoice[0]; binaries += cosyvoice[1]; hiddenimports += cosyvoice[2]
-matcha = collect_all('matcha')
-datas += matcha[0]; binaries += matcha[1]; hiddenimports += matcha[2]
-dia = collect_all('dia')
-datas += dia[0]; binaries += dia[1]; hiddenimports += dia[2]
-pynini = collect_all('pynini')
-datas += pynini[0]; binaries += pynini[1]; hiddenimports += pynini[2]
+for pkg in ['aiosqlite', 'cosyvoice', 'matcha', 'dia', 'pynini', 'dac']:
+    pkg_datas = collect_all(pkg)
+    datas += pkg_datas[0]
+    binaries += pkg_datas[1]
+    hiddenimports += pkg_datas[2]
 
 
 gpustack = Analysis(
