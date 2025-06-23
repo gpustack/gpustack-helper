@@ -1,0 +1,11 @@
+#!/bin/bash
+
+APP_NAME="gpustackhelper"
+if pgrep -x "$APP_NAME" >/dev/null; then
+  osascript -e 'display dialog "请先退出 GPUStack Helper 后再安装升级。" with title "安装提示" buttons {"确定"} default button 1 with icon caution'
+  exit 1
+fi
+
+if launchctl list | grep -q "ai.gpustack"; then
+  launchctl bootout system/ai.gpustack
+fi

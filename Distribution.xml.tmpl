@@ -14,6 +14,11 @@
     </choice>
 
     <pkg-ref id="ai.gpustack.pkg" version="${GIT_VERSION}" auth="Root">${PACKAGE_NAME}</pkg-ref>
+    <pkg-ref id="ai.gpustack.pkg">
+        <must-close>
+            <app id="ai.gpustack.gpustack"/>
+        </must-close>
+    </pkg-ref>
 
     <installation-check script="InstallationCheck()"/>
     <script>
