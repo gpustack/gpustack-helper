@@ -1,7 +1,7 @@
 import sys
 import os
 from os.path import join, abspath, dirname
-from typing import List, Literal, Dict, Callable
+from typing import List, Literal, Dict, Callable, Tuple
 import subprocess
 from platformdirs import (
     user_data_dir,
@@ -82,6 +82,64 @@ def get_lagecy_env_file() -> str:
         return join(os.environ["APPDATA"], app_name, f"{app_name.lower()}.env")
     else:
         raise NotImplementedError("Unsupported platform")
+
+
+def _default_dac_parameters() -> Tuple[str, str, str]:
+    """
+    refer to dac default parameters
+    """
+    __MODEL_LATEST_TAGS__ = {
+        ("44khz", "8kbps"): "0.0.1",
+        ("24khz", "8kbps"): "0.0.4",
+        ("16khz", "8kbps"): "0.0.5",
+        ("44khz", "16kbps"): "1.0.0",
+    }
+    default_model_type = '44khz'
+    default_model_bitrate = '8kbps'
+    tag = 'latest'
+    tag = __MODEL_LATEST_TAGS__.get(
+        (default_model_type, default_model_bitrate), tag
+    )  # default to 44khz, 8kbps if not found
+    return (
+        default_model_type,
+        tag,
+        default_model_bitrate,
+    )
+
+
+def dac_download_link() -> str:
+    """
+    copy hardcode url from dac to avoid unnecessary import
+    """
+
+    __MODEL_URLS__ = {
+        (
+            "44khz",
+            "0.0.1",
+            "8kbps",
+        ): "https://github.com/descriptinc/descript-audio-codec/releases/download/0.0.1/weights.pth",
+        (
+            "24khz",
+            "0.0.4",
+            "8kbps",
+        ): "https://github.com/descriptinc/descript-audio-codec/releases/download/0.0.4/weights_24khz.pth",
+        (
+            "16khz",
+            "0.0.5",
+            "8kbps",
+        ): "https://github.com/descriptinc/descript-audio-codec/releases/download/0.0.5/weights_16khz.pth",
+        (
+            "44khz",
+            "1.0.0",
+            "16kbps",
+        ): "https://github.com/descriptinc/descript-audio-codec/releases/download/1.0.0/weights_44khz_16kbps.pth",
+    }
+    return __MODEL_URLS__.get(_default_dac_parameters(), None)
+
+
+def get_dac_filename() -> str:
+    model_type_default, tag, model_bitrate_default = _default_dac_parameters()
+    return f"weights_{model_type_default}_{model_bitrate_default}_{tag}.pth"
 
 
 if __name__ == "__main__":

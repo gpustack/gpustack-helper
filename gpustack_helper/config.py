@@ -3,6 +3,7 @@ import os
 import logging
 import threading
 import plistlib
+import sys
 from pydantic import BaseModel, Field
 from typing import Optional, Dict, Any, List, BinaryIO
 from gpustack.config import Config
@@ -138,7 +139,13 @@ class HelperConfig(_FileConfigModel, _HelperConfig):
         return plistlib.dumps(self.model_dump(by_alias=True, exclude_none=True))
 
     def decode_from_data(self, f: BinaryIO) -> Dict[str, Any]:
-        return plistlib.load(f)
+        data = plistlib.load(f)
+        # 忽略 EnvironmentVariables 下 key 为 'HOME' 的键值对
+        env = data.get('EnvironmentVariables')
+        if sys.platform == 'darwin':
+            if isinstance(env, dict) and 'HOME' in env:
+                env.pop('HOME')
+        return data
 
     @classmethod
     def bind(
@@ -205,6 +212,12 @@ class HelperConfig(_FileConfigModel, _HelperConfig):
 
     def update_with_lock(self, **kwargs):
         kwargs['ProgramArguments'] = self.program_args_defaults()
+        if 'EnvironmentVariables' not in kwargs:
+            kwargs['EnvironmentVariables'] = {}
+        if 'HOME' not in kwargs['EnvironmentVariables']:
+            kwargs['EnvironmentVariables']['HOME'] = os.path.join(
+                self.active_data_dir, 'root'
+            )
         super().update_with_lock(**kwargs)
 
     def program_args_defaults(self) -> List[str]:
