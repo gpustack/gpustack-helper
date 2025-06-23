@@ -21,20 +21,9 @@ from gpustack_helper.status import Status
 from gpustack_helper.common import create_menu_action, show_warning
 from gpustack_helper.icon import get_icon
 from gpustack_helper.services.abstract_service import AbstractService as service
+from gpustack_helper.about import About
 
 logger = logging.getLogger(__name__)
-
-
-def show_about():
-    from PySide6.QtWidgets import QMessageBox
-
-    try:
-        import gpustack
-
-        version = gpustack.__version__
-    except Exception:
-        version = "未知"
-    QMessageBox.information(None, "关于", f"GPUStack\n版本: {version}")
 
 
 @Slot()
@@ -206,8 +195,8 @@ def init_application(cfg: HelperConfig) -> QApplication:
     menu.addSeparator()
     # 添加“关于”菜单项
     about_action = QAction("关于", menu)
-
-    about_action.triggered.connect(show_about)
+    about = About(parent=menu)
+    about_action.triggered.connect(lambda: about.exec())
     menu.addAction(about_action)
 
     # 添加退出菜单项
