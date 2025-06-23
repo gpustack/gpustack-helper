@@ -12,7 +12,7 @@ function package() {
   PACKAGE_NAME="unmanaged_gpustack.pkg"
   OUTPUT_NAME="gpustack-${GIT_VERSION}.pkg"
   rm -f "${PACKAGE_NAME}" "${OUTPUT_NAME}" Distribution.xml
-  pkgbuild --component GPUStack.app --install-location "/Applications" --identifier "ai.gpustack.pkg" "${PACKAGE_NAME}"  --version "${GIT_VERSION#*v}"
+  pkgbuild --component GPUStack.app --install-location "/Applications" --identifier "ai.gpustack.pkg" "${PACKAGE_NAME}"  --version "${GIT_VERSION#*v}" --scripts "${ROOT_DIR}/scripts"
   PACKAGE_NAME=${PACKAGE_NAME} GIT_VERSION=${GIT_VERSION} envsubst < ../Distribution.xml.tmpl > Distribution.xml
   productbuild --distribution ./Distribution.xml --package-path ./  "${OUTPUT_NAME}"
   popd
