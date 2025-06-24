@@ -11,11 +11,45 @@ on:
         required: false
         type: boolean
         default: false
+      setup-certificate:
+        required: false
+        type: boolean
+        default: false
 
+env:
+  CODESIGN_IDENTITY: "${{ inputs.setup-certificate && 'Developer ID Application: Seal Software Co., Ltd. (33M7PPLX4U)' || '' }}"
 jobs:
   ci-macos:
     runs-on: macos-latest
     steps:
+      - name: Install the Apple certificate
+        if: ${{ inputs.setup-certificate }}
+        env:
+          BUILD_CERTIFICATE_BASE64: ${{ secrets.P12_BASE64 }}
+          P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
+          INSTALLER__CERTIFICATE_BASE64: ${{ secrets.INSTALLER_P12_BASE64 }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+        run: |
+          # create variables
+          CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
+          INSTALLER_CERTIFICATE_PATH=$RUNNER_TEMP/installer_certificate.p12
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+
+          # import certificate and provisioning profile from secrets
+          echo -n "$BUILD_CERTIFICATE_BASE64" | base64 --decode -o $CERTIFICATE_PATH
+          echo -n "$INSTALLER__CERTIFICATE_BASE64" | base64 --decode -o $INSTALLER_CERTIFICATE_PATH
+
+          # create temporary keychain
+          security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+
+          # import certificate to keychain
+          security import $CERTIFICATE_PATH -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
+          security import $INSTALLER_CERTIFICATE_PATH -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
+          security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          security list-keychain -d user -s $KEYCHAIN_PATH
+
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
@@ -54,6 +88,8 @@ jobs:
       - name: Run CI build
         id: run_ci
         env:
+          APPLE_ID: ${{ inputs.setup-certificate && secrets.APPLE_ID || '' }}
+          APP_PASSWORD: ${{ inputs.setup-certificate && secrets.APP_PASSWORD || '' }}
           INSTALL_PREFIX: /opt/homebrew
         run: |
           make ci

@@ -55,6 +55,7 @@ for pkg in ['aiosqlite', 'cosyvoice', 'matcha', 'dia', 'pynini', 'dac']:
     binaries += pkg_datas[1]
     hiddenimports += pkg_datas[2]
 
+identity = os.getenv('CODESIGN_IDENTITY', None)
 
 gpustack = Analysis(
     ['gpustack_helper/binary_entrypoint.py'],
@@ -84,7 +85,7 @@ gpustack_exe = EXE(
     disable_windowed_traceback=False,
     argv_emulation=True,
     target_arch=None,
-    codesign_identity=None,
+    codesign_identity=identity,
     entitlements_file=None,
 )
 
@@ -102,7 +103,7 @@ vox_box_exe = EXE(
     disable_windowed_traceback=False,
     argv_emulation=True,
     target_arch=None,
-    codesign_identity=None,
+    codesign_identity=identity,
     entitlements_file=None,
 )
 
@@ -137,7 +138,7 @@ helper_exe = EXE(
     disable_windowed_traceback=False,
     argv_emulation=True,
     target_arch=None,
-    codesign_identity=None,
+    codesign_identity=identity,
     entitlements_file=None,
 )
 
