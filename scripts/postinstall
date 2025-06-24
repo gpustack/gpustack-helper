@@ -25,4 +25,14 @@ function set_wired_limit() {
     sysctl -w iogpu.wired_limit_mb="$WIRED_LIMIT_MB"
 }
 
+function open_app() {
+  APP_NAME="GPUStack.app"
+  if [ -d "/Applications/$APP_NAME" ]; then
+      open "/Applications/$APP_NAME"
+  else
+      echo "App not found, not auto-launching."
+  fi
+}
+
 set_wired_limit
+open_app
