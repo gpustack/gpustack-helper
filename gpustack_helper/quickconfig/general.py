@@ -27,14 +27,26 @@ class GeneralConfigPage(DataBindWidget):
     server_url: Tuple[QLabel, QLineEdit] = None
     token: Tuple[QLabel, QLineEdit] = None
     port: Tuple[QLabel, QSpinBox] = None
+    INPUT_WIDGET_INDEX: int = 1
 
     @Slot(QRadioButton, bool)
     def on_button_toggled(self, button: QRadioButton, checked: bool):
         if not checked:
             return
         id = self.group.id(button)
-        for widget in self.server_url:
-            widget.setEnabled(id == self._worker_index)
+        is_worker = id == self._worker_index
+        for widgets, enable_status in (
+            (self.server_url, is_worker),
+            (self.port, not is_worker),
+        ):
+            for widget in widgets:
+                widget.setEnabled(enable_status)
+        self.token[self.INPUT_WIDGET_INDEX].setPlaceholderText(
+            '必填' if is_worker else '可选'
+        )
+        self.server_url[self.INPUT_WIDGET_INDEX].setPlaceholderText(
+            '必填' if is_worker else ''
+        )
 
     def _get_role_group(self, selection_layout: QLayout) -> QGroupBox:
         rows: List[Union[QWidget, QLayout, Tuple[QLabel, QLineEdit]]] = list()
