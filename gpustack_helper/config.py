@@ -232,6 +232,29 @@ class HelperConfig(_FileConfigModel, _HelperConfig):
             f"--data-dir={os.path.abspath(self.active_data_dir)}",
         ]
 
+    def ensure_data_dir(self) -> None:
+        if not os.path.exists(self.user_data_dir):
+            try:
+                os.makedirs(self.user_data_dir, exist_ok=True)
+            except Exception as e:
+                logger.error(
+                    f"Failed to create user data directory {self.user_data_dir}: {e}"
+                )
+                raise
+        if self.user_data_dir != self.active_data_dir and sys.platform == 'darwin':
+            link_target = os.path.join(self.user_data_dir, "data-dir")
+            if os.path.lexists(link_target):
+                if os.path.islink(link_target):
+                    if os.readlink(link_target) != self.active_data_dir:
+                        os.unlink(link_target)
+                else:
+                    logger.warning(
+                        f"{link_target} exists and is not a symlink, skip creating symlink to avoid data loss."
+                    )
+                    return
+            if not os.path.exists(link_target):
+                os.symlink(self.active_data_dir, link_target, target_is_directory=True)
+
 
 def _default_path(default: str, override: Optional[str] = None) -> str:
     return override if override is not None else default

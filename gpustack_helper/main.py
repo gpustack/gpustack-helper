@@ -257,6 +257,7 @@ def main():
         logging.basicConfig(level=logging.INFO)
     cfg = parse_args(args)
     app = init_application(cfg)
+    cfg.ensure_data_dir()
     sys.exit(app.exec())
 
 
