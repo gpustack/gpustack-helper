@@ -44,6 +44,8 @@ class EnvironmentVariablePage(DataBindWidget):
 
     def remove_row(self):
         current_row = self.envvar.currentRow()
+        if hasattr(self, "_home_row") and current_row == self._home_row:
+            return  # 禁止删除HOME行
         if current_row >= 0:
             self.envvar.removeRow(current_row)
 
@@ -92,3 +94,20 @@ class EnvironmentVariablePage(DataBindWidget):
         self.helper_binders.append(
             HelperConfig.bind("EnvironmentVariables", self.envvar)
         )
+
+    def on_show(self, cfg, config):
+        super().on_show(cfg, config)
+        for row in range(self.envvar.rowCount()):
+            key_widget = self.envvar.cellWidget(row, 0)
+            if isinstance(key_widget, QComboBox) and key_widget.currentText() == "HOME":
+                # 设置Value列不可编辑
+                item = self.envvar.item(row, 1)
+                if item:
+                    item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
+                # 设置Name列不可编辑
+                key_widget.setEditable(False)
+                # 记录HOME行索引
+                self._home_row = row
+                break
+        else:
+            self._home_row = None
