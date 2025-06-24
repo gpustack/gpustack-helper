@@ -32,7 +32,7 @@ jobs:
         with:
           draft: true
           fail_on_unmatched_files: true
-          files: gpustack-*
+          files: dist/gpustack-*
       - name: Copy to Tencent COS
         uses: ./.github/actions/copy-to-cos
         with:
