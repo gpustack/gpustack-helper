@@ -20,14 +20,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: tag-macos
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Setup Version
-        id: setup_version
-        run: |
-          make export_version
       - name: Download Artifacts
         uses: actions/download-artifact@v4
         with:
@@ -49,5 +41,5 @@ jobs:
           tencent-cos-region: 'ap-guangzhou'
           tencent-cos-bucket: 'gpustack-installer-1303613262'
           sync-file-path: dist
-          tencent-cos-path-prefix: "releases/${{ steps.setup_version.outputs.GIT_VERSION }}/"
+          tencent-cos-path-prefix: "releases/${{ github.ref_name }}/"
           dry-run: false
