@@ -145,21 +145,24 @@ class QuickConfig(QDialog):
         )
         buttons.rejected.connect(self.reject)
         ok = buttons.button(QDialogButtonBox.StandardButton.Ok)
-        ok.setText("Start")
+        ok.setText("启动")
         ok.clicked.connect(self.save_and_start)
         save = buttons.button(QDialogButtonBox.StandardButton.Save)
+        save.setText("保存")
         save.clicked.connect(self.save)
+        cancel = buttons.button(QDialogButtonBox.StandardButton.Cancel)
+        cancel.setText("取消")
 
         @Slot()
         def on_state_changed(new_state: service.State):
             if new_state == service.State.STARTED or new_state == service.State.TO_SYNC:
-                ok.setText("Restart")
+                ok.setText("重启")
                 ok.setEnabled(True)
             elif new_state == service.State.STOPPED:
-                ok.setText("Start")
+                ok.setText("启动")
                 ok.setEnabled(True)
             else:
-                ok.setText("Start")
+                ok.setText("启动")
                 ok.setEnabled(False)
 
         self.status.status_signal.connect(on_state_changed)
