@@ -140,11 +140,6 @@ class HelperConfig(_FileConfigModel, _HelperConfig):
 
     def decode_from_data(self, f: BinaryIO) -> Dict[str, Any]:
         data = plistlib.load(f)
-        # 忽略 EnvironmentVariables 下 key 为 'HOME' 的键值对
-        env = data.get('EnvironmentVariables')
-        if sys.platform == 'darwin':
-            if isinstance(env, dict) and 'HOME' in env:
-                env.pop('HOME')
         return data
 
     @classmethod
@@ -199,7 +194,6 @@ class HelperConfig(_FileConfigModel, _HelperConfig):
             filepath = os.path.join(
                 _default_path(default_data_dir, data_dir), helper_config_file_name
             )
-        super().__init__(filepath, **kwargs)
         self._override_data_dir = data_dir
         self._override_binary_path = binary_path
         self._debug = debug
@@ -207,17 +201,16 @@ class HelperConfig(_FileConfigModel, _HelperConfig):
             raise ValueError(
                 "GPUStack binary path is not set. Please set it via commandline flag."
             )
+        super().__init__(filepath, **kwargs)
         if len(kwargs) == 0 and os.path.exists(filepath):
             self._reload()
+        if self.EnvironmentVariables.get("HOME") is None:
+            self.EnvironmentVariables["HOME"] = os.path.join(
+                self.active_data_dir, "root"
+            )
 
     def update_with_lock(self, **kwargs):
         kwargs['ProgramArguments'] = self.program_args_defaults()
-        if 'EnvironmentVariables' not in kwargs:
-            kwargs['EnvironmentVariables'] = {}
-        if 'HOME' not in kwargs['EnvironmentVariables']:
-            kwargs['EnvironmentVariables']['HOME'] = os.path.join(
-                self.active_data_dir, 'root'
-            )
         super().update_with_lock(**kwargs)
 
     def program_args_defaults(self) -> List[str]:
