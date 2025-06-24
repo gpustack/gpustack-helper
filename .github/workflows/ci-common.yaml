@@ -15,6 +15,19 @@ on:
         required: false
         type: boolean
         default: false
+    secrets:
+      P12_BASE64:
+        required: false
+      P12_PASSWORD:
+        required: false
+      INSTALLER_P12_BASE64:
+        required: false
+      KEYCHAIN_PASSWORD:
+        required: false
+      APPLE_ID:
+        required: false
+      APP_PASSWORD:
+        required: false
 
 env:
   CODESIGN_IDENTITY: "${{ inputs.setup-certificate && 'Developer ID Application: Seal Software Co., Ltd. (33M7PPLX4U)' || '' }}"
