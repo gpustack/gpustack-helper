@@ -86,19 +86,21 @@ function gpustack::version::get_version_vars() {
     if [[ -z "${LAST_TAG}" ]]; then
       LAST_TAG="v0.0.0.0"
     fi
-    # 保留前两位，第三位+1，第四位用GITHUB_RUN_NUMBER
+    # Keep 3 digits of the version number, and calculate the fourth digit with github.run_number
     if [[ "${LAST_TAG}" =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
       major="${BASH_REMATCH[1]}"
       minor="${BASH_REMATCH[2]}"
       patch="${BASH_REMATCH[3]}"
-      patch=$((patch + 1))
-      build="${GITHUB_RUN_NUMBER:-999}"
+      build="${BASH_REMATCH[4]}"
+      # the build number must >=100 with 100 per step. but we don't need to validate it here.
+      # the run_number will mod 100 and add to build.
+      build=$((build + (${GITHUB_RUN_NUMBER:-99} % 100)))
       GIT_VERSION="v${major}.${minor}.${patch}.${build}"
     elif [[ "${LAST_TAG}" =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
       major="${BASH_REMATCH[1]}"
       minor="${BASH_REMATCH[2]}"
       patch="${BASH_REMATCH[3]}"
-      patch=$((patch + 1))
+      # set to the maximum build number if not specified.
       build="${GITHUB_RUN_NUMBER:-999}"
       GIT_VERSION="v${major}.${minor}.${patch}.${build}"
     else
