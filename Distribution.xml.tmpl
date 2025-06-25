@@ -22,8 +22,21 @@
 
     <installation-check script="InstallationCheck()"/>
     <script>
+<![CDATA[
     function InstallationCheck() {
+        output = system.applications.fromIdentifier('ai.gpustack.gpustack');
+        var found = output.some(function(item) {
+            return item.CFBundleExecutable && 
+                item.CFBundleExecutable.split('/').pop() === 'gpustack';
+        });
+        if (found) {
+            my.result.message = "检测到 gpustack 正在后台运行，请通过GPUStack Helper或launchctl停止服务后继续安装。";
+            my.result.type = "Fatal";
+            return false;
+        }
+        system.log("Debugger triggered!");
         return true;
     }
+]]>
     </script>
 </installer-gui-script>
