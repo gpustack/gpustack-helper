@@ -5,7 +5,7 @@ import threading
 import plistlib
 import sys
 from pydantic import BaseModel, Field
-from typing import Optional, Dict, Any, List, BinaryIO
+from typing import Optional, Dict, Any, List, BinaryIO, Tuple
 from gpustack.config import Config
 from PySide6.QtWidgets import QWidget
 from gpustack_helper.databinder import DataBinder, set_nested_data
@@ -96,16 +96,44 @@ class CleanConfig(_FileConfigModel, Config):
     def active_config_path(self) -> str:
         return os.path.join(self._active_dir, os.path.basename(self.filepath))
 
+    @property
+    def active_token_path(self) -> str:
+        """
+        Returns the path to the token file.
+        """
+        return os.path.join(self._active_dir, "token")
+
     @classmethod
     def bind(
         cls, key: str, widget: QWidget, /, ignore_zero_value: bool = False
     ) -> DataBinder:
         return DataBinder(key, cls, widget, ignore_zero_value=ignore_zero_value)
 
+    def token_exists(self) -> bool:
+        return self.token is not None or os.path.exists(self.active_token_path)
+
     def load_active_config(self) -> "CleanConfig":
         return CleanConfig(
             active_dir=self._active_dir, filepath=self.active_config_path
         )
+
+    def get_token(self) -> Optional[str]:
+        if not self.token_exists():
+            return None
+        if self.token is not None:
+            return self.token
+        with open(self.active_token_path, "r") as f:
+            token = f.read().strip()
+            if token:
+                return token
+        return None
+
+    def get_port(self) -> Tuple[int, bool]:
+        is_tls = self.ssl_certfile is not None and self.ssl_keyfile is not None
+        port = self.port
+        if port is None or port == 0:
+            port = 443 if is_tls else 80
+        return port, is_tls
 
 
 class _HelperConfig(BaseModel):

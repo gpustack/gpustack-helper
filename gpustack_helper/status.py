@@ -186,7 +186,7 @@ class Status(QMenu):
 
     def is_port_available(self) -> bool:
         config = self.cfg.user_gpustack_config
-        port = config.port
+        port, _ = config.get_port()
         host = config.host
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             try:

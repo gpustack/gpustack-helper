@@ -37,10 +37,7 @@ def open_browser(parent: QWidget, cfg: HelperConfig) -> None:
     if config.server_url is not None and config.server_url != "":
         url = QUrl(config.server_url)
     else:
-        is_tls = config.ssl_certfile is not None and config.ssl_keyfile is not None
-        port = config.port
-        if port is None or port == 0:
-            port = 443 if is_tls else 80
+        port, is_tls = config.get_port()
         hostname = (
             config.host
             if config.host is not None and config.host != ""
@@ -134,22 +131,18 @@ class Configuration:
         for binder in self.binders:
             binder.load_config.emit(self.cfg)
 
+    def token_exists(self) -> bool:
+        if self.cfg.user_gpustack_config.load_active_config().token_exists():
+            return True
+        return self.cfg.user_gpustack_config.token is not None
+
     @Slot()
     def copy_token_to_clipboard(self):
-        clipboard = QApplication.clipboard()
-        gpustack_config = self.cfg.user_gpustack_config
-        if gpustack_config.token is not None:
-            clipboard.setText(gpustack_config.token)
-            return
-
-        token_path = os.path.join(self.cfg.active_data_dir, "token")
-        if not os.path.exists(token_path):
-            logger.warning("Token file does not exist.")
-            return
-        with open(token_path, "r", encoding="utf-8") as f:
-            token = f.read().strip()
+        token = self.cfg.user_gpustack_config.load_active_config().get_token()
+        if token is None:
+            token = self.cfg.user_gpustack_config.token
         if token:
-            clipboard.setText(token)
+            QApplication.clipboard().setText(token)
 
     def is_first_boot(self) -> bool:
         return not os.path.exists(self.cfg.filepath)
