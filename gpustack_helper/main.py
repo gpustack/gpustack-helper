@@ -195,8 +195,8 @@ def init_application(cfg: HelperConfig) -> QApplication:
     menu.addSeparator()
     # 添加“关于”菜单项
     about_action = QAction("关于", menu)
-    about = About(parent=menu)
-    about_action.triggered.connect(lambda: about.exec())
+    about = About()
+    about_action.triggered.connect(lambda: about.show())
     menu.addAction(about_action)
 
     # 添加退出菜单项

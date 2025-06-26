@@ -1,21 +1,21 @@
 import logging
-from PySide6.QtWidgets import QMessageBox, QWidget, QApplication
+from PySide6.QtWidgets import QMessageBox, QApplication
 from PySide6.QtCore import Qt
 
 logger = logging.getLogger(__name__)
 
 
 class About:
-    parent: QWidget
     gpustack_version: str
     gpustack_commit: str
     helper_version: str
     helper_commit: str
     prefix: str = "GPUStack\n"
     text: str
+    msg: QMessageBox
+    copy_button: QMessageBox.StandardButton
 
-    def __init__(self, parent: QWidget):
-        self.parent = parent
+    def __init__(self):
         self.gpustack_commit = "unknown"
         self.gpustack_version = "unknown"
         self.helper_version = "unknown"
@@ -42,15 +42,24 @@ class About:
         helper_version = f"Helper: {self.helper_version}({self.helper_commit})"
         self.text = f"{gpustack_version}{helper_version}"
 
-    def exec(self):
-        msg = QMessageBox(self.parent)
-        msg.setWindowTitle("关于")
-        msg.setIcon(QMessageBox.Icon.Information)
-        msg.setText(f"{self.prefix}{self.text}")
-        copy_button = msg.addButton("复制", QMessageBox.ButtonRole.AcceptRole)
-        msg.addButton("确认", QMessageBox.ButtonRole.RejectRole)
-        msg.setDefaultButton(copy_button)
-        msg.setWindowFlags(msg.windowFlags() | Qt.WindowType.WindowStaysOnTopHint)
-        msg.exec()
-        if msg.clickedButton() == copy_button:
-            QApplication.clipboard().setText(self.text)
+        self.msg = QMessageBox()
+        self.msg.setWindowTitle("关于")
+        self.msg.setIcon(QMessageBox.Icon.Information)
+        self.msg.setText(f"{self.prefix}{self.text}")
+        self.copy_button = self.msg.addButton("复制", QMessageBox.ButtonRole.AcceptRole)
+        self.msg.addButton("确认", QMessageBox.ButtonRole.RejectRole)
+        self.msg.setDefaultButton(self.copy_button)
+        self.msg.setWindowFlags(
+            self.msg.windowFlags() | Qt.WindowType.WindowStaysOnTopHint
+        )
+
+        def on_button_clicked(button):
+            if button == self.copy_button:
+                QApplication.clipboard().setText(self.text)
+
+        self.msg.buttonClicked.connect(on_button_clicked)
+
+    def show(self):
+        self.msg.show()
+        self.msg.raise_()
+        self.msg.activateWindow()
