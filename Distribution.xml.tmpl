@@ -24,8 +24,8 @@
     <script>
 <![CDATA[
     function InstallationCheck() {
-        output = system.applications.fromIdentifier('ai.gpustack.gpustack');
-        var found = output.some(function(item) {
+        var output = system.applications.fromIdentifier('ai.gpustack.gpustack');
+        var found = Array.isArray(output) && output.some(function(item) {
             return item.CFBundleExecutable && 
                 item.CFBundleExecutable.split('/').pop() === 'gpustack';
         });
