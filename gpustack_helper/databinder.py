@@ -71,6 +71,14 @@ class DataBinder(QObject):
         if isinstance(widget, (QAction, QAbstractButton)):
             self._widget_getter = widget.isChecked
             self._widget_setter = widget.setChecked
+        elif (
+            isinstance(widget, QLineEdit)
+            and hasattr(widget, "value")
+            and hasattr(widget, "setValue")
+        ):
+            # number widget like QDoubleSpinBox or QSpinBox
+            self._widget_getter = widget.value
+            self._widget_setter = widget.setValue
         elif isinstance(widget, QLineEdit):
             self._widget_getter = widget.text
             self._widget_setter = widget.setText

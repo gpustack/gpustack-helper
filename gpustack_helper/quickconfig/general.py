@@ -7,7 +7,6 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QLineEdit,
-    QSpinBox,
     QLayout,
 )
 from PySide6.QtCore import Qt, Slot, SignalInstance
@@ -18,6 +17,7 @@ from gpustack_helper.quickconfig.common import (
     fixed_titled_port_input,
     create_stand_box,
     DataBindWidget,
+    NumericLineEdit,
 )
 
 
@@ -26,7 +26,7 @@ class GeneralConfigPage(DataBindWidget):
     _worker_index: int = None
     server_url: Tuple[QLabel, QLineEdit] = None
     token: Tuple[QLabel, QLineEdit] = None
-    port: Tuple[QLabel, QSpinBox] = None
+    port: Tuple[QLabel, NumericLineEdit] = None
     INPUT_WIDGET_INDEX: int = 1
 
     @Slot(QRadioButton, bool)
@@ -63,7 +63,7 @@ class GeneralConfigPage(DataBindWidget):
         return create_stand_box("服务角色", rows)
 
     def _create_port_group(self) -> QGroupBox:
-        rows: List[Union[QWidget, QLayout, Tuple[QLabel, QSpinBox]]] = list()
+        rows: List[Union[QWidget, QLayout, Tuple[QLabel, NumericLineEdit]]] = list()
         for _, (attr, title) in enumerate((("port", "服务端口:"),)):
             label, input = fixed_titled_port_input(title)
             self.config_binders.append(

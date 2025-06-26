@@ -1,4 +1,5 @@
-from typing import List, Tuple, Union
+from abc import abstractmethod
+from typing import List, Tuple, Union, Optional
 from PySide6.QtWidgets import (
     QLabel,
     QLineEdit,
@@ -9,10 +10,11 @@ from PySide6.QtWidgets import (
     QGroupBox,
     QFormLayout,
 )
+from PySide6.QtGui import QIntValidator
 from PySide6.QtCore import Qt, SignalInstance
 from gpustack_helper.databinder import DataBinder
 from gpustack_helper.config import HelperConfig, CleanConfig
-from abc import abstractmethod
+
 
 group_box_style = """
     QGroupBox {
@@ -28,6 +30,31 @@ group_box_style = """
 """
 
 
+class NumericLineEdit(QLineEdit):
+    validator: QIntValidator
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.validator = QIntValidator()
+        self.setValidator(self.validator)
+        self.setPlaceholderText("自动选择")
+
+    def value(self) -> Optional[int]:
+        text = self.text().strip()
+        return int(text) if text else None
+
+    def setValue(self, value: Optional[int]) -> None:
+        if value is None:
+            self.clear()
+        elif isinstance(value, int) and value == 0:
+            self.setText("")
+        else:
+            self.setText(str(value))
+
+    def setRange(self, min_value: int, max_value: int) -> None:
+        self.validator.setRange(min_value, max_value)
+
+
 def fixed_titled_input(title: str) -> Tuple[QLabel, QLineEdit]:
     label = QLabel(title)
     label.setSizePolicy(
@@ -40,18 +67,17 @@ def fixed_titled_input(title: str) -> Tuple[QLabel, QLineEdit]:
     return (label, input)
 
 
-def fixed_titled_port_input(title: str) -> Tuple[QLabel, QSpinBox]:
+def fixed_titled_port_input(title: str) -> Tuple[QLabel, NumericLineEdit]:
     # validator = QIntValidator(0, 65535)  # 端口范围
     label = QLabel(title)
     label.setSizePolicy(
         QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed
     )  # 固定标签大小
-    input = QSpinBox()
+    input = NumericLineEdit()
     input.setSizePolicy(
-        QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed
+        QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed
     )  # 输入框横向扩展
     input.setRange(0, 65535)  # 设置端口范围
-    input.setButtonSymbols(QSpinBox.ButtonSymbols.NoButtons)  # 移除上下按钮
     return (label, input)
 
 
