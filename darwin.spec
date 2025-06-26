@@ -49,7 +49,16 @@ hiddenimports = [
     'tn', 'itn', '_pywrapfst'
 ]
 
-for pkg in ['aiosqlite', 'cosyvoice', 'matcha', 'dia', 'pynini', 'dac']:
+for pkg in [
+    'aiosqlite',
+    'asyncmy',
+    'asyncpg',
+    'cosyvoice', 
+    'matcha', 
+    'dia', 
+    'pynini', 
+    'dac',
+    ]:
     pkg_datas = collect_all(pkg)
     datas += pkg_datas[0]
     binaries += pkg_datas[1]
