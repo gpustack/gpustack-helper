@@ -30,14 +30,28 @@ group_box_style = """
 """
 
 
-class NumericLineEdit(QLineEdit):
-    validator: QIntValidator
+class FixedUpValidator(QIntValidator):
+    def validate(self, input_str, pos):
+        if input_str == "":
+            return (QIntValidator.State.Intermediate, input_str, pos)
+        try:
+            value = int(input_str)
+            if self.bottom() <= value <= self.top():
+                return (QIntValidator.State.Acceptable, input_str, pos)
+            else:
+                return (QIntValidator.State.Invalid, input_str, pos)
+        except ValueError:
+            return (QIntValidator.State.Invalid, input_str, pos)
 
-    def __init__(self, parent=None):
+
+class NumericLineEdit(QLineEdit):
+    validator: FixedUpValidator
+
+    def __init__(self, parent=None, min_value: int = 0, max_value: int = 65535):
         super().__init__(parent)
-        self.validator = QIntValidator()
+        self.validator = FixedUpValidator(parent=self, bottom=min_value, top=max_value)
         self.setValidator(self.validator)
-        self.setPlaceholderText("自动选择")
+        self.setPlaceholderText("可选")
 
     def value(self) -> Optional[int]:
         text = self.text().strip()
@@ -51,33 +65,20 @@ class NumericLineEdit(QLineEdit):
         else:
             self.setText(str(value))
 
-    def setRange(self, min_value: int, max_value: int) -> None:
-        self.validator.setRange(min_value, max_value)
-
 
 def fixed_titled_input(title: str) -> Tuple[QLabel, QLineEdit]:
     label = QLabel(title)
-    label.setSizePolicy(
-        QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed
-    )  # 固定标签大小
+    label.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
     input = QLineEdit()
-    input.setSizePolicy(
-        QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed
-    )  # 输入框横向扩展
+    input.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
     return (label, input)
 
 
 def fixed_titled_port_input(title: str) -> Tuple[QLabel, NumericLineEdit]:
-    # validator = QIntValidator(0, 65535)  # 端口范围
     label = QLabel(title)
-    label.setSizePolicy(
-        QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed
-    )  # 固定标签大小
+    label.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
     input = NumericLineEdit()
-    input.setSizePolicy(
-        QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed
-    )  # 输入框横向扩展
-    input.setRange(0, 65535)  # 设置端口范围
+    input.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
     return (label, input)
 
 
