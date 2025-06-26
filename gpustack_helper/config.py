@@ -81,7 +81,6 @@ class _FileConfigModel(BaseModel):
 
 
 class CleanConfig(_FileConfigModel, Config):
-    port: Optional[int] = Field(default=80, description="服务端口")
     _active_dir: str
 
     def __init__(self, active_dir: str, filepath: str, **kwargs):
