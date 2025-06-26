@@ -94,7 +94,12 @@ function gpustack::version::get_version_vars() {
       build="${BASH_REMATCH[4]}"
       # the build number must >=100 with 100 per step. but we don't need to validate it here.
       # the run_number will mod 100 and add to build.
-      build=$((build + (${GITHUB_RUN_NUMBER:-99} % 100)))
+      new_build=$((build + (${GITHUB_RUN_NUMBER:-99} % 100)))
+      if [ "$new_build" -eq "$build" ]; then
+        build=$((new_build + 100))
+      else
+        build=${new_build}
+      fi
       GIT_VERSION="v${major}.${minor}.${patch}.${build}"
     elif [[ "${LAST_TAG}" =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
       major="${BASH_REMATCH[1]}"
