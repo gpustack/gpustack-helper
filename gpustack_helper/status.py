@@ -42,7 +42,7 @@ class Status(QMenu):
         self.cfg = cfg
         self._status = service.State.UNKNOWN
         # --- status
-        super().__init__(f"状态({self.status.display_text})", parent)
+        super().__init__(f"状态({service.get_display_text(self._status)})", parent)
         parent.addMenu(self)
 
         self.start_or_stop = create_menu_action("启动", self)
@@ -103,9 +103,7 @@ class Status(QMenu):
     @Slot(service.State)
     def on_status_changed(self, status: service.State):
         self.update_title(status)
-        self.start_or_stop.setText(
-            "启动" if status == service.State.STOPPED else "停止"
-        )
+        self.start_or_stop.setText("启动" if status & service.State.STOPPED else "停止")
         # need to use launchctl to create service
         if status == service.State.STARTING:
             self.start_process(
@@ -123,7 +121,7 @@ class Status(QMenu):
                 (service.State.UNKNOWN, service.State.STOPPED),
             )
 
-        if status == service.State.TO_SYNC or status == service.State.STARTED:
+        if status & service.State.STARTED:
             self.restart.setEnabled(True)
         else:
             self.start_or_stop.setDisabled(False)
@@ -132,12 +130,16 @@ class Status(QMenu):
     def update_title(self, status: Optional[service.State] = None):
         if status is None:
             status = self.status
-        self.setTitle(f"状态({status.display_text})")
+        self.setTitle(f"状态({service.get_display_text(status)})")
 
     @Slot()
     def start_or_stop_action(self):
         self.start_or_stop.setDisabled(True)
-        if self.status == service.State.STOPPED and not self.is_port_available():
+        if (
+            not bool(self.status & service.State.TO_MIGRATE)
+            and bool(self.status & service.State.STOPPED)
+            and not self.is_port_available()
+        ):
             config = self.cfg.user_gpustack_config
             port = config.port
             host = config.host
@@ -149,7 +151,7 @@ class Status(QMenu):
         else:
             self.status = (
                 service.State.STARTING
-                if self.status == service.State.STOPPED
+                if self.status & service.State.STOPPED
                 else service.State.STOPPING
             )
         self.start_or_stop.setEnabled(True)

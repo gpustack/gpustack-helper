@@ -106,6 +106,7 @@ class EnvironmentVariablePage(DataBindWidget):
                     item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
                 # 设置Name列不可编辑
                 key_widget.setEditable(False)
+                self.envvar.setRowHidden(row, True)
                 # 记录HOME行索引
                 self._home_row = row
                 break

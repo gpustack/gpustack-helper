@@ -4,11 +4,19 @@ import logging
 import threading
 import plistlib
 import sys
+from types import SimpleNamespace
 from pydantic import BaseModel, Field
 from typing import Optional, Dict, Any, List, BinaryIO, Tuple
-from gpustack.config import Config
 from PySide6.QtWidgets import QWidget
+
 from gpustack_helper.databinder import DataBinder, set_nested_data
+from gpustack.config import Config
+from gpustack.cmd.start import (
+    set_common_options,
+    set_server_options,
+    set_worker_options,
+    load_config_from_yaml,
+)
 
 from gpustack_helper.defaults import (
     log_file_path,
@@ -18,8 +26,11 @@ from gpustack_helper.defaults import (
     gpustack_binary_path,
 )
 
+
 logger = logging.getLogger(__name__)
 helper_config_file_name = "ai.gpustack.plist"
+# TODO remove platform related logic
+plist_path = f"/Library/LaunchDaemons/{helper_config_file_name}"
 
 
 class _FileConfigModel(BaseModel):
@@ -62,7 +73,9 @@ class _FileConfigModel(BaseModel):
                 content = self.decode_from_data(f)
                 set_nested_data(self, content)
         except FileNotFoundError:
-            logger.warning(f"Configuration file not found: {self.filepath}")
+            logger.debug(
+                f"Configuration file not found, skipping loading: {self.filepath}"
+            )
         except Exception as e:
             logger.error(f"Failed to reload configuration: {e}")
 
@@ -93,6 +106,10 @@ class CleanConfig(_FileConfigModel, Config):
             self._reload()
 
     @property
+    def data_dir(self) -> str:
+        return self._active_dir
+
+    @property
     def active_config_path(self) -> str:
         return os.path.join(self._active_dir, os.path.basename(self.filepath))
 
@@ -117,6 +134,14 @@ class CleanConfig(_FileConfigModel, Config):
             active_dir=self._active_dir, filepath=self.active_config_path
         )
 
+    def is_sync(self) -> bool:
+        """
+        Check if the current configuration is synchronized with the active configuration.
+        """
+        user_config = self.model_dump(exclude_defaults=True)
+        active_config = self.load_active_config().model_dump(exclude_defaults=True)
+        return user_config == active_config
+
     def get_token(self) -> Optional[str]:
         if not self.token_exists():
             return None
@@ -134,6 +159,34 @@ class CleanConfig(_FileConfigModel, Config):
         if port is None or port == 0:
             port = 443 if is_tls else 80
         return port, is_tls
+
+
+def simple_parse(input_args: List[str]) -> SimpleNamespace:
+    # args_list is directly read from old ai.gpustack.plist, the first two arguments must be
+    # <executable> and 'start'
+    args_list = input_args[2:]
+    args = SimpleNamespace()
+    positional = []
+    i = 0
+    while i < len(args_list):
+        arg = args_list[i]
+        if arg.startswith('--'):
+            if '=' in arg:
+                key, value = arg.split('=', 1)
+                setattr(args, key[2:].replace('-', '_'), value)
+            else:
+                # Check if next arg is a value (not another option)
+                if i + 1 < len(args_list) and not args_list[i + 1].startswith('--'):
+                    setattr(args, arg[2:].replace('-', '_'), args_list[i + 1])
+                    i += 1
+                else:
+                    setattr(args, arg[2:].replace('-', '_'), True)
+        else:
+            positional.append(arg)
+        i += 1
+    if positional:
+        setattr(args, '_positional', positional)
+    return args
 
 
 class _HelperConfig(BaseModel):
@@ -165,7 +218,8 @@ class HelperConfig(_FileConfigModel, _HelperConfig):
     def encode_to_data(self) -> bytes:
         return plistlib.dumps(self.model_dump(by_alias=True, exclude_none=True))
 
-    def decode_from_data(self, f: BinaryIO) -> Dict[str, Any]:
+    @classmethod
+    def decode_from_data(cls, f: BinaryIO) -> Dict[str, Any]:
         data = plistlib.load(f)
         return data
 
@@ -194,10 +248,59 @@ class HelperConfig(_FileConfigModel, _HelperConfig):
             )
         return os.path.join(self.active_data_dir, os.path.basename(self.filepath))
 
+    def load_active_config(self) -> "HelperConfig":
+        """
+        Load the active configuration from the specified path.
+        """
+        return HelperConfig(
+            filepath=self.active_config_path,
+            data_dir=self.active_data_dir,
+            binary_path=self.gpustack_binary_path,
+            debug=self.debug,
+        )
+
     @property
     def user_gpustack_config(self) -> CleanConfig:
         return CleanConfig(
             self.active_data_dir, os.path.join(self.user_data_dir, gpustack_config_name)
+        )
+
+    @classmethod
+    def load_legacy_helper_config(cls) -> Optional[_HelperConfig]:
+        if not os.path.exists(plist_path):
+            return None
+        if os.path.islink(plist_path):
+            logger.warning(f"{plist_path} is a symlink, it is not a legacy config.")
+            return None
+        try:
+            with open(plist_path, 'rb') as f:
+                datas = cls.decode_from_data(f)
+        except Exception as e:
+            logger.error(f"Failed to read legacy config from {plist_path}: {e}")
+            return None
+
+        return _HelperConfig(**datas)
+
+    def load_legacy_gpustack_config(self) -> Optional[CleanConfig]:
+        helper_config = self.load_legacy_helper_config()
+        if helper_config is None:
+            return None
+        args = simple_parse(helper_config.ProgramArguments)
+        config_data = {}
+        active_data_dir = _default_path(
+            Config.get_data_dir(), getattr(args, 'data_dir', None)
+        )
+        if hasattr(args, 'data_dir'):
+            delattr(args, 'data_dir')
+        if hasattr(args, 'config_file') and os.path.exists(args.config_file):
+            config_data.update(load_config_from_yaml(args.config_file))
+        set_common_options(args, config_data)
+        set_server_options(args, config_data)
+        set_worker_options(args, config_data)
+        return CleanConfig(
+            active_dir=active_data_dir,
+            filepath=os.path.join(self.user_data_dir, gpustack_config_name),
+            **config_data,
         )
 
     @property
@@ -231,6 +334,10 @@ class HelperConfig(_FileConfigModel, _HelperConfig):
         super().__init__(filepath, **kwargs)
         if len(kwargs) == 0 and os.path.exists(filepath):
             self._reload()
+        else:
+            legacy = self.load_legacy_helper_config()
+            if legacy is not None:
+                self.EnvironmentVariables.update(legacy.EnvironmentVariables)
         if self.EnvironmentVariables.get("HOME") is None:
             self.EnvironmentVariables["HOME"] = os.path.join(
                 self.active_data_dir, "root"
@@ -272,8 +379,13 @@ class HelperConfig(_FileConfigModel, _HelperConfig):
                         f"{link_target} exists and is not a symlink, skip creating symlink to avoid data loss."
                     )
                     return
-            if not os.path.exists(link_target):
+            if not os.path.lexists(link_target):
                 os.symlink(self.active_data_dir, link_target, target_is_directory=True)
+
+    def is_sync(self) -> bool:
+        user_config = self.model_dump(exclude_defaults=True)
+        active_config = self.load_active_config().model_dump(exclude_defaults=True)
+        return user_config == active_config
 
 
 def _default_path(default: str, override: Optional[str] = None) -> str:
