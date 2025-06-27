@@ -89,7 +89,7 @@ def get_start_script(cfg: HelperConfig, restart: bool = False) -> str:
     legacy_gpustack_config = cfg.load_legacy_gpustack_config()
     migrate = (
         f"mkdir -p '{abspath(cfg.active_data_dir)}';"
-        f"for f in {bash_escape_spaces(legacy_gpustack_config.data_dir)}/*;"
+        f"for f in {bash_escape_spaces(legacy_gpustack_config.active_data_dir)}/*;"
         "do case \\\"$f\\\" in *.sh) continue ;; esac;"
         f"mv -f \\\"$f\\\" '{abspath(cfg.active_data_dir)}';done"
         if legacy_gpustack_config
@@ -206,7 +206,7 @@ class DarwinService(AbstractService):
             common: Dict[str, any] = output.get(service_id, {})
             is_running = common.get("state", "") == "running"
         # if current_plist_path is None, it means the service is not registered.
-        is_sync = cfg.is_sync() and cfg.user_gpustack_config.is_sync()
+        is_sync = not is_running or cfg.is_sync() and cfg.user_gpustack_config.is_sync()
         state = (
             AbstractService.State.STARTED
             if is_running

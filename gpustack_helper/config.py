@@ -106,7 +106,7 @@ class CleanConfig(_FileConfigModel, Config):
             self._reload()
 
     @property
-    def data_dir(self) -> str:
+    def active_data_dir(self) -> str:
         return self._active_dir
 
     @property
