@@ -64,7 +64,7 @@ def set_tray_icon(
     disabled_icon: QIcon,
     state: service.State,
 ):
-    if state == service.State.STARTED or state == service.State.TO_SYNC:
+    if state & service.State.STARTED:
         icon = normal_icon
     else:
         icon = disabled_icon
@@ -73,7 +73,7 @@ def set_tray_icon(
 
 @Slot(service.State)
 def widget_enabled_on_state(widget: QWidget, state: service.State):
-    widget.setEnabled(state == service.State.STARTED or state == service.State.TO_SYNC)
+    widget.setEnabled(bool(state & service.State.STARTED))
 
 
 class Configuration:
@@ -212,6 +212,11 @@ def init_application(cfg: HelperConfig) -> QApplication:
     timer.start(2000)
 
     tray_icon.show()
+
+    legacy_gpustack_config = cfg.load_legacy_gpustack_config()
+    if legacy_gpustack_config is not None:
+        # will migrate legacy config to new config
+        legacy_gpustack_config.update_with_lock()
 
     if configure.is_first_boot():
         configure.quick_config_dialog.show()

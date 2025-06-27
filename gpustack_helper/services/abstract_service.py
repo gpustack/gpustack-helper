@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from PySide6.QtCore import QProcess, QThread
-from enum import Enum
+from enum import Flag, auto
 from typing import Union
 
 from gpustack_helper.config import HelperConfig
@@ -12,25 +12,35 @@ class AbstractService(ABC):
     Provides a common interface and shared functionality.
     """
 
-    class State(Enum):
-        STOPPED = ("stopped", "停止")
-        STOPPING = ("stopping", "停止中")
-        RESTARTING = ("restarting", "重新启动中")
-        STARTING = ("starting", "启动中")
-        TO_SYNC = ("to_sync", "需要同步")
-        UNKNOWN = ("unknown", "未知")
-        STARTED = ("started", "运行中")
+    class State(Flag):
+        STOPPED = auto()
+        STOPPING = auto()
+        RESTARTING = auto()
+        STARTING = auto()
+        TO_MIGRATE = auto()
+        TO_SYNC = auto()
+        UNKNOWN = auto()
+        STARTED = auto()
 
-        def __init__(self, state, display_text):
-            self.state = state  # 内部状态值
-            self.display_text = display_text  # 显示文本
-
-        @classmethod
-        def get_display_text(cls, state):
-            return next(
-                (status.display_text for status in cls if status.state == state),
-                "未知状态",
-            )
+    @classmethod
+    def get_display_text(cls, state: State) -> str:
+        display_text = {
+            cls.State.STOPPED | cls.State.TO_MIGRATE: "待升级",
+            cls.State.STOPPED: "停止",
+            cls.State.STOPPING: "停止中",
+            cls.State.RESTARTING: "重新启动中",
+            cls.State.STARTING: "启动中",
+            cls.State.TO_SYNC: "待重启",
+            cls.State.UNKNOWN: "未知",
+            cls.State.STARTED: "运行中",
+        }
+        if display_text.get(state, None) is not None:
+            return display_text[state]
+        texts = []
+        for key, value in display_text.items():
+            if (state & key) == key:
+                texts.append(value)
+        return "|".join(texts) if texts else "未知状态"
 
     @classmethod
     @abstractmethod
