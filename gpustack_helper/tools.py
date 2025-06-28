@@ -1,9 +1,10 @@
 import os
 import shutil
 import re
-import stat
+import logging
+from packaging.version import parse
 from pathlib import Path
-from typing import Dict
+from typing import Dict, Tuple
 from gpustack.worker.tools_manager import ToolsManager, BUILTIN_LLAMA_BOX_VERSION
 from gpustack.utils.platform import system, arch, DeviceTypeEnum
 from importlib.resources import files
@@ -14,7 +15,9 @@ LLAMA_BOX_VERSION = os.getenv("LLAMA_BOX_VERSION", BUILTIN_LLAMA_BOX_VERSION)
 LLAMA_BOX_DOWNLOAD_REPO = os.getenv("LLAMA_BOX_DOWNLOAD_REPO", f"gpustack/{LLAMA_BOX}")
 PREFERRED_BASE_URL = os.getenv("PREFERRED_BASE_URL", None)
 VERSION_URL_PREFIX = f"{LLAMA_BOX_DOWNLOAD_REPO}/releases/download/{LLAMA_BOX_VERSION}"
-TARGET_PREFIX = f"{LLAMA_BOX}-{system()}-{arch()}-"
+TARGET_PREFIX = f"dl-{LLAMA_BOX}-{system()}-{arch()}-"
+
+logger = logging.getLogger(__name__)
 
 
 def exe() -> str:
@@ -46,6 +49,19 @@ def get_toolkit_name(device: str) -> str:
         return device
 
 
+def split_filename(file_name: str) -> Tuple[str, str]:
+    suffix = file_name.removeprefix(TARGET_PREFIX).split("-", 1)
+    if len(suffix) < 2:
+        device_name = suffix[0].removesuffix(".zip")
+        version_suffix = ".zip"
+    else:
+        device_name, version_suffix = suffix[0], suffix[1]
+    # e.g. get the toolkit name from mapping, metal -> mps, cuda -> cuda, etc.
+    toolkit_name = get_toolkit_name(device_name)
+    version_suffix = version_suffix.removesuffix(".zip")
+    return toolkit_name, version_suffix
+
+
 def verify_file_checksum(file_path: str, expected_checksum: str) -> bool:
     """Verify the checksum of a file against an expected value."""
     import hashlib
@@ -59,11 +75,18 @@ def verify_file_checksum(file_path: str, expected_checksum: str) -> bool:
 
 def download_checksum(
     manager: ToolsManager, tmp_dir: Path, BaseURL: str
-) -> Dict[str, str]:
+) -> Dict[str, Tuple[str, str, str]]:
+    """
+    return the directory for the llama-box files and their checksums.
+    Will be filtered by version, os and arch.
+    The key would be toolkit name and the value would be a tuple of
+    (version_suffix, file_name, checksum).
+    """
     checksum_filename = "sha256sum.txt"
     checksum_file_path = tmp_dir / checksum_filename
     url_path = f"{VERSION_URL_PREFIX}/{checksum_filename}"
-    files_checksum: Dict[str, str] = {}
+    # e.g. <device>: (<version>, <file_name>, <checksum>)
+    files_checksum: Dict[str, Tuple[str, str, str]] = {}
     try:
         manager._download_file(
             url_path, checksum_file_path, base_url=PREFERRED_BASE_URL
@@ -75,7 +98,16 @@ def download_checksum(
                     continue
                 if not pair[1].startswith(TARGET_PREFIX):
                     continue
-                files_checksum[pair[1]] = pair[0]
+                toolkit, version_suffix = split_filename(pair[1])
+                if toolkit in files_checksum:
+                    if version_suffix == "":
+                        continue
+                    version, _, _ = files_checksum[toolkit]
+                    if parse(version_suffix) <= parse(version):
+                        # Skip if the version is not newer than the existing one
+                        continue
+                # e.g. dl-llama-box-linux-amd64-cuda-12.4.zip
+                files_checksum[toolkit] = (version_suffix, pair[1], pair[0])
 
     except Exception as e:
         raise RuntimeError(f"Failed to download checksum file: {e}")
@@ -92,37 +124,10 @@ def download_and_extract(manager: ToolsManager, file_path: Path, checksum: str) 
         if not verify_file_checksum(file_path, checksum):
             raise RuntimeError(f"Checksum verification failed for {file_path.name}")
         manager._extract_file(file_path, file_path.parent)
-        source_binary: Path = file_path.parent / f'{LLAMA_BOX}{exe()}'
-        return source_binary
+        os.remove(file_path)  # Remove the zip file after extraction
+        return file_path.parent
     except Exception as e:
         raise RuntimeError(f"Failed to download or verify {file_path.name}: {e}")
-
-
-def move_and_rename(file_name: str, source_binary: Path, target_dir: Path) -> str:
-    # e.g. llama-box-windows-amd64-cuda-12.4.zip -> cuda and 12.4.zip
-    # e.g. llama-box-darwin-arm64-metal.zip -> metal and .zip
-    suffix = file_name.removeprefix(TARGET_PREFIX).split("-", 1)
-    if len(suffix) < 2:
-        device_name = suffix[0].removesuffix(".zip")
-        version_suffix = ".zip"
-    else:
-        device_name, version_suffix = suffix[0], suffix[1]
-    # e.g. get the toolkit name from mapping, metal -> mps, cuda -> cuda, etc.
-    toolkit_name = get_toolkit_name(device_name)
-    # e.g. 12.4.zip -> 12.4
-    version_suffix = version_suffix.removesuffix(".zip")
-    if version_suffix != "":
-        version_suffix = "-" + version_suffix
-    target_file_name = f"{TARGET_PREFIX}{toolkit_name}{version_suffix}{exe()}"
-    if not os.path.exists(source_binary):
-        raise RuntimeError(
-            f"Expected binary {source_binary} not found after extraction."
-        )
-    if system() != "windows":
-        st = os.stat(source_binary)
-        os.chmod(source_binary, st.st_mode | stat.S_IEXEC)
-    shutil.move(source_binary, target_dir / target_file_name)
-    return target_file_name
 
 
 def download_llama_box(manager: ToolsManager):
@@ -132,12 +137,18 @@ def download_llama_box(manager: ToolsManager):
         shutil.rmtree(llama_box_tmp_dir)
     os.makedirs(llama_box_tmp_dir, exist_ok=True)
     files_checksum = download_checksum(manager, llama_box_tmp_dir, PREFERRED_BASE_URL)
-    for file_name, checksum in files_checksum.items():
-        file_path = llama_box_tmp_dir / file_name
+    for toolkit, (_, file_name, checksum) in files_checksum.items():
+        file_path = (
+            llama_box_tmp_dir
+            / f"{LLAMA_BOX}-{LLAMA_BOX_VERSION}-{system()}-{arch()}-{toolkit}"
+            / file_name
+        )
         try:
-            source_binary = download_and_extract(manager, file_path, checksum)
-            target_file_name = move_and_rename(file_name, source_binary, target_dir)
-            manager._update_versions_file(target_file_name, LLAMA_BOX_VERSION)
+            os.makedirs(file_path.parent, exist_ok=True)
+            logger.info(f"Downloading {file_path.parent.name} '{LLAMA_BOX_VERSION}'")
+            versioned_dir = download_and_extract(manager, file_path, checksum)
+            shutil.move(versioned_dir, target_dir)
+            manager._update_versions_file(versioned_dir.name, LLAMA_BOX_VERSION)
 
         except Exception as e:
             raise RuntimeError(f"Failed to download or verify {file_name}: {e}")
