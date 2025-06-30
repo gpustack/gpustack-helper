@@ -2,12 +2,23 @@ import subprocess
 import logging
 import re
 import os
-from os.path import exists, abspath, islink
+from os.path import exists, islink
 from typing import Dict, Any, List, Tuple
 from PySide6.QtCore import QProcess
-from gpustack_helper.config import HelperConfig, plist_path
+from gpustack_helper.config import (
+    user_helper_config,
+    active_helper_config,
+    user_gpustack_config,
+    active_gpustack_config,
+    legacy_gpustack_config,
+    all_config_sync,
+)
 from gpustack_helper.services.abstract_service import AbstractService
-from gpustack_helper.defaults import get_dac_filename, base_path
+from gpustack_helper.defaults import (
+    get_dac_filename,
+    resource_path,
+    runtime_plist_path as plist_path,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -58,25 +69,28 @@ def parse_service_status() -> Dict[str, Any]:
     return data
 
 
-def get_start_script(cfg: HelperConfig, restart: bool = False) -> str:
-    gpustack_config = cfg.user_gpustack_config
-    target_path = abspath(cfg.active_config_path)
-    # update to ensure the config is up-to-date
-    cfg.update_with_lock()
-    gpustack_config.update_with_lock()
+def get_start_script(restart: bool = False) -> str:
+    helper_user = user_helper_config()
+    helper_user.update_with_lock()
+    helper_active = active_helper_config()
 
-    files_copy: List[Tuple[str, str]] = [(abspath(cfg.filepath), target_path)]
-    if gpustack_config.filepath != gpustack_config.active_config_path:
-        files_copy.append(
-            (
-                abspath(gpustack_config.filepath),
-                abspath(gpustack_config.active_config_path),
-            ),
+    gpustack_user = user_gpustack_config()
+    gpustack_user.update_with_lock()
+    gpustack_active = active_gpustack_config()
+
+    files_copy: List[Tuple[str, str]] = [
+        (user.config_path, active.config_path)
+        for (user, active) in (
+            (helper_user, helper_active),
+            (gpustack_user, gpustack_active),
         )
+    ]
 
     # 过滤掉不存在的源文件
     def files_different(pair: Tuple[str, str]) -> bool:
         src, dst = pair
+        if src == dst:
+            return False
         if not exists(src):
             return False
         if not exists(dst):
@@ -86,34 +100,36 @@ def get_start_script(cfg: HelperConfig, restart: bool = False) -> str:
 
     files_copy = list(filter(files_different, files_copy))
     # migrate the legacy data dir
-    legacy_gpustack_config = cfg.load_legacy_gpustack_config()
+    old_gpustack_config = legacy_gpustack_config()
     migrate = (
-        f"mkdir -p '{abspath(cfg.active_data_dir)}';"
-        f"for f in {bash_escape_spaces(legacy_gpustack_config.active_data_dir)}/*;"
+        f"mkdir -p '{gpustack_active.data_dir}';"
+        f"for f in {bash_escape_spaces(old_gpustack_config.data_dir)}/*;"
         "do case \\\"$f\\\" in *.sh) continue ;; esac;"
-        f"mv -f \\\"$f\\\" '{abspath(cfg.active_data_dir)}';done"
-        if legacy_gpustack_config
+        f"mv -f \\\"$f\\\" '{gpustack_active.data_dir}';done"
+        if old_gpustack_config
         else None
     )
     copy_files = ";".join(
-        f"cp -f '{src}' '{dst}'; chmod 0644 '{dst}'; chown root:whel '{dst}'"
+        f"cp -f '{src}' '{dst}'; chmod 0644 '{dst}'; chown root:wheel '{dst}'"
         for src, dst in files_copy
     )
     copy_files = (
-        f"mkdir -p '{abspath(cfg.active_data_dir)}'; {copy_files}"
+        f"mkdir -p '{gpustack_active.data_dir}'; {copy_files}"
         if len(files_copy) != 0
         else None
     )
     link_plist = (
-        f"rm -f '{plist_path}'; ln -sf '{target_path}' '{plist_path}'"
-        if not is_plist_synced(target_path) or copy_files is not None
+        f"rm -f '{plist_path}'; ln -sf '{helper_active.config_path}' '{plist_path}'"
+        if not is_plist_synced(helper_active.config_path) or copy_files is not None
         else None
     )
     # link target should be resources path of gpustack_helper and name would be dac filename
-    # link source should be the dac filename in the cfg.active_data_dir/root dir
-    target_home = os.path.join(cfg.active_data_dir, "root", '.cache', 'descript', 'dac')
+    # link source should be the dac filename in the gpustack_active.data_dir/root dir
+    target_home = os.path.join(
+        gpustack_active.data_dir, "root", '.cache', 'descript', 'dac'
+    )
     dac_filename = get_dac_filename()
-    source_filename = os.path.join(base_path, dac_filename)
+    source_filename = os.path.join(resource_path, dac_filename)
     target_filename = os.path.join(target_home, dac_filename)
     link_dac = (
         f"rm -f '{target_filename}'; mkdir -p '{target_home}'; ln -s '{source_filename}' '{target_filename}'"
@@ -154,15 +170,15 @@ def get_start_script(cfg: HelperConfig, restart: bool = False) -> str:
     return f"""do shell script "{joined_script}" with prompt "GPUStack 需要启动后台服务" with administrator privileges"""
 
 
-def launch_service(cfg: HelperConfig, restart: bool = False) -> QProcess:
+def launch_service(restart: bool = False) -> QProcess:
     """
     prompt sudo privileges to run following command
     1. remove /Library/LaunchDaemons/ai.gpustack.plist if not a symlink or not targetting the right path
-    2. create a symlink to /Library/LaunchDaemons/ai.gpustack.plist pointing to cfg.filepath
+    2. create a symlink to /Library/LaunchDaemons/ai.gpustack.plist pointing to active_gpustack_config.config_path
     3. launch service with launchctl bootstrap system /Library/LaunchDaemons/ai.gpustack.plist
     the commands will be put into an AppleScript to run with administrator privileges
     """
-    applescript = get_start_script(cfg, restart=restart)
+    applescript = get_start_script(restart=restart)
     qprocess_launch = QProcess()
     qprocess_launch.setProgram("osascript")
     qprocess_launch.setArguments(["-e", applescript])
@@ -173,11 +189,11 @@ def launch_service(cfg: HelperConfig, restart: bool = False) -> QProcess:
 
 class DarwinService(AbstractService):
     @classmethod
-    def start(self, cfg: HelperConfig) -> QProcess:
-        return launch_service(cfg, restart=False)
+    def start(self) -> QProcess:
+        return launch_service(restart=False)
 
     @classmethod
-    def stop(self, cfg: HelperConfig) -> QProcess:
+    def stop(self) -> QProcess:
         # prompt sudo privileges to run following command
         # 1. run launchctl bootout system /Library/LaunchDaemons/ai.gpustack.plist
         script = f"""
@@ -192,12 +208,13 @@ class DarwinService(AbstractService):
         return qprocess_stop
 
     @classmethod
-    def restart(self, cfg: HelperConfig) -> QProcess:
-        return launch_service(cfg, restart=True)
+    def restart(self) -> QProcess:
+        return launch_service(restart=True)
 
     @classmethod
-    def get_current_state(self, cfg: HelperConfig) -> AbstractService.State:
-        if not is_plist_synced(cfg.active_config_path):
+    def get_current_state(self) -> AbstractService.State:
+        helper_active = active_helper_config()
+        if not is_plist_synced(helper_active.config_path):
             return AbstractService.State.TO_MIGRATE | AbstractService.State.STOPPED
 
         output = parse_service_status()
@@ -206,7 +223,7 @@ class DarwinService(AbstractService):
             common: Dict[str, any] = output.get(service_id, {})
             is_running = common.get("state", "") == "running"
         # if current_plist_path is None, it means the service is not registered.
-        is_sync = not is_running or cfg.is_sync() and cfg.user_gpustack_config.is_sync()
+        is_sync = not is_running or all_config_sync()
         state = (
             AbstractService.State.STARTED
             if is_running
@@ -216,8 +233,3 @@ class DarwinService(AbstractService):
             state |= AbstractService.State.TO_SYNC
 
         return state
-
-    @classmethod
-    def migrate(self, cfg: HelperConfig) -> None:
-        # TODO
-        pass

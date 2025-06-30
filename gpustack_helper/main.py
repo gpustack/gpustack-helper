@@ -15,7 +15,16 @@ from gpustack_helper.defaults import (
     open_and_select_file,
     open_with_app,
 )
-from gpustack_helper.config import HelperConfig
+from gpustack_helper.config import (
+    init_config,
+    HelperConfig,
+    user_helper_config,
+    user_gpustack_config,
+    active_gpustack_config,
+    migrate_config,
+    ensure_data_dir,
+    is_first_boot,
+)
 from gpustack_helper.quickconfig.dialog import QuickConfig
 from gpustack_helper.status import Status
 from gpustack_helper.common import create_menu_action, show_warning
@@ -32,8 +41,8 @@ def open_log_dir() -> None:
 
 
 @Slot()
-def open_browser(parent: QWidget, cfg: HelperConfig) -> None:
-    config = cfg.user_gpustack_config.load_active_config()
+def open_browser(parent: QWidget) -> None:
+    config = active_gpustack_config()
     if config.server_url is not None and config.server_url != "":
         url = QUrl(config.server_url)
     else:
@@ -77,7 +86,6 @@ def widget_enabled_on_state(widget: QWidget, state: service.State):
 
 
 class Configuration:
-    cfg: HelperConfig
     open_config: QAction
     quick_config: QAction
     quick_config_dialog: QuickConfig
@@ -85,8 +93,7 @@ class Configuration:
     copy_token: QAction
     binders: List[DataBinder] = list()
 
-    def __init__(self, cfg: HelperConfig, status: Status, parent: QMenu):
-        self.cfg = cfg
+    def __init__(self, status: Status, parent: QMenu):
         parent.aboutToShow.connect(self.on_menu_shown)
 
         self.boot_on_start = create_menu_action("开机启动", parent)
@@ -95,7 +102,7 @@ class Configuration:
         self.boot_on_start.toggled.connect(self.update_and_save)
 
         # 快速配置
-        self.quick_config_dialog = QuickConfig(cfg, status)
+        self.quick_config_dialog = QuickConfig(status)
         self.quick_config = create_menu_action("快速配置", parent)
         self.quick_config.triggered.connect(self.quick_config_dialog.show)
 
@@ -112,52 +119,40 @@ class Configuration:
 
     @Slot()
     def open_config_dir(self) -> None:
-        config = self.cfg.user_gpustack_config
-        if not os.path.exists(config.filepath):
-            config._save()
-        open_and_select_file(config.filepath)
+        config = user_gpustack_config()
+        if not os.path.exists(config.config_path):
+            config.update_with_lock()
+        open_and_select_file(config.config_path)
 
     @Slot()
     def on_menu_shown(self):
         for binder in self.binders:
-            binder.load_config.emit(self.cfg)
+            binder.load_config.emit(user_helper_config())
 
     @Slot()
     def update_and_save(self):
         content: Dict[str, Any] = {}
         for binder in self.binders:
             binder.update_config(content)
-        self.cfg.update_with_lock(**content)
+        user_helper_config().update_with_lock(**content)
         for binder in self.binders:
-            binder.load_config.emit(self.cfg)
+            binder.load_config.emit(user_helper_config())
 
     def token_exists(self) -> bool:
-        if self.cfg.user_gpustack_config.load_active_config().token_exists():
+        if active_gpustack_config().token_exists():
             return True
-        return self.cfg.user_gpustack_config.token is not None
+        return user_gpustack_config().token is not None
 
     @Slot()
     def copy_token_to_clipboard(self):
-        token = self.cfg.user_gpustack_config.load_active_config().get_token()
-        if token is None:
-            token = self.cfg.user_gpustack_config.token
+        token = (
+            active_gpustack_config().get_token() or user_gpustack_config().get_token()
+        )
         if token:
             QApplication.clipboard().setText(token)
 
-    def is_first_boot(self) -> bool:
-        return not os.path.exists(self.cfg.filepath)
 
-
-def parse_args(args: argparse.Namespace) -> HelperConfig:
-    config_path = getattr(args, "config_path", None)
-    data_dir = getattr(args, "data_dir", None)
-    binary_path = getattr(args, "binary_path", None)
-    debug = getattr(args, "debug", False)
-
-    return HelperConfig(config_path, data_dir, binary_path, debug)
-
-
-def init_application(cfg: HelperConfig) -> QApplication:
+def init_application() -> QApplication:
     app = QApplication(sys.argv)
     normal_icon = get_icon(False)
     disabled_icon = get_icon(True)
@@ -166,7 +161,7 @@ def init_application(cfg: HelperConfig) -> QApplication:
     tray_icon = QSystemTrayIcon(disabled_icon, parent=app, toolTip="GPUStack Helper")
     # 创建主菜单
     menu = QMenu()
-    status = Status(menu, cfg)
+    status = Status(menu)
 
     status.status_signal.connect(
         lambda x: set_tray_icon(tray_icon, normal_icon, disabled_icon, x)
@@ -174,12 +169,12 @@ def init_application(cfg: HelperConfig) -> QApplication:
     app.aboutToQuit.connect(status.wait_for_process_finish)
 
     open_gpustack = create_menu_action("控制台", menu)
-    open_gpustack.triggered.connect(lambda: open_browser(menu, cfg))
+    open_gpustack.triggered.connect(lambda: open_browser(menu))
     open_gpustack.setDisabled(True)
     status.status_signal.connect(lambda x: widget_enabled_on_state(open_gpustack, x))
     menu.addSeparator()
 
-    configure = Configuration(cfg, status, menu)
+    configure = Configuration(status, menu)
 
     # 打开日志
     log_action = create_menu_action("显示日志", menu)
@@ -213,12 +208,8 @@ def init_application(cfg: HelperConfig) -> QApplication:
 
     tray_icon.show()
 
-    legacy_gpustack_config = cfg.load_legacy_gpustack_config()
-    if legacy_gpustack_config is not None:
-        # will migrate legacy config to new config
-        legacy_gpustack_config.update_with_lock()
-
-    if configure.is_first_boot():
+    migrate_config()
+    if is_first_boot():
         configure.quick_config_dialog.show()
     return app
 
@@ -233,9 +224,6 @@ def main():
     else:
         signal.signal(signal.SIGINT, signal.SIG_DFL)
     parser = argparse.ArgumentParser(description="GPUStack Helper")
-    parser.add_argument(
-        "--config", default=None, type=str, help="GPUStack helper config path"
-    )
     parser.add_argument(
         "--debug", default=None, action="store_true", help="Enable debug logs"
     )
@@ -253,9 +241,9 @@ def main():
         logging.basicConfig(level=logging.DEBUG)
     else:
         logging.basicConfig(level=logging.INFO)
-    cfg = parse_args(args)
-    app = init_application(cfg)
-    cfg.ensure_data_dir()
+    init_config(args)
+    app = init_application()
+    ensure_data_dir()
     sys.exit(app.exec())
 
 

@@ -13,7 +13,12 @@ from PySide6.QtWidgets import (
 
 from PySide6.QtGui import QIcon
 from PySide6.QtCore import Qt, Signal, Slot
-from gpustack_helper.config import HelperConfig, CleanConfig
+from gpustack_helper.config import (
+    HelperConfig,
+    GPUStackConfig,
+    user_gpustack_config,
+    user_helper_config,
+)
 from gpustack_helper.quickconfig.common import wrap_layout, DataBindWidget
 from gpustack_helper.quickconfig.general import GeneralConfigPage
 from gpustack_helper.quickconfig.envvar import EnvironmentVariablePage
@@ -99,14 +104,12 @@ def create_list(
 
 
 class QuickConfig(QDialog):
-    cfg: HelperConfig = None
-    signalOnShow = Signal(HelperConfig, CleanConfig, name="onShow")
-    signalOnSave = Signal(HelperConfig, CleanConfig, name="onSave")
+    signalOnShow = Signal(HelperConfig, GPUStackConfig, name="onShow")
+    signalOnSave = Signal(HelperConfig, GPUStackConfig, name="onSave")
     pages: Tuple[Tuple[str, DataBindWidget]] = None
     status: Status = None
 
-    def __init__(self, cfg: HelperConfig = None, status: Status = None, *args):
-        self.cfg = cfg
+    def __init__(self, status: Status = None, *args):
         self.status = status
         super().__init__(*args)
         self.setWindowTitle("快速配置")
@@ -115,7 +118,7 @@ class QuickConfig(QDialog):
         self.setFixedSize(600, 400)
         self.stacked_widget = QStackedWidget()
         self.pages = (
-            ("通用", GeneralConfigPage(cfg, self.signalOnShow, self.signalOnSave)),
+            ("通用", GeneralConfigPage(self.signalOnShow, self.signalOnSave)),
             ("环境变量", EnvironmentVariablePage(self.signalOnShow, self.signalOnSave)),
         )
         list_widget = create_list(self.stacked_widget, *self.pages)
@@ -165,10 +168,12 @@ class QuickConfig(QDialog):
         return buttons
 
     def showEvent(self, event):
-        self.cfg._reload()
-        config = self.cfg.user_gpustack_config
+        cfg = user_helper_config()
+        cfg.reload()
+        config = user_gpustack_config()
+        config.reload()
         super().showEvent(event)
-        self.signalOnShow.emit(self.cfg, config)
+        self.signalOnShow.emit(cfg, config)
         self.raise_()
         self.activateWindow()
 
@@ -182,7 +187,9 @@ class QuickConfig(QDialog):
 
     def save(self):
         # 处理ButtonGroup的状态，当选择不是 Server + Worker 时清空输入
-        self.signalOnSave.emit(self.cfg, self.cfg.user_gpustack_config)
+        cfg = user_helper_config()
+        config = user_gpustack_config()
+        self.signalOnSave.emit(cfg, config)
 
         helper_data: Dict[str, any] = {}
         config_data: Dict[str, any] = {}
@@ -192,8 +199,7 @@ class QuickConfig(QDialog):
             for binder in page.config_binders:
                 binder.update_config(config_data)
 
-        self.cfg.update_with_lock(**helper_data)
-        config = self.cfg.user_gpustack_config
+        cfg.update_with_lock(**helper_data)
         config.update_with_lock(**config_data)
 
         super().accept()

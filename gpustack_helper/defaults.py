@@ -9,24 +9,31 @@ from platformdirs import (
 )
 
 app_name = "GPUStack"
+helper_name = app_name + "Helper"
 gpustack_config_name = "config.yaml"
+helper_config_file_name = "ai.gpustack.plist"
+runtime_plist_path = (
+    f"/Library/LaunchDaemons/{helper_config_file_name}"
+    if sys.platform == "darwin"
+    else None
+)
 
-base_path = abspath(
-    join(dirname(sys.executable), "../Resources")
+frozen_base = (
+    join(dirname(sys.executable), '../Resources')
+    if sys.platform == "darwin"
+    else join(dirname(sys.executable), '_internal')
+)
+
+resource_path = abspath(
+    frozen_base
     if getattr(sys, "frozen", False)
     else join(dirname(abspath(__file__)), "..")
 )
-icon_path = join(base_path, "tray_icon.png")
+icon_path = join(resource_path, "tray_icon.png")
 
-data_dir = user_data_dir(app_name, appauthor=False, roaming=True)
+data_dir = user_data_dir(helper_name, appauthor=False, roaming=True)
 global_data_dir = site_data_dir(app_name, appauthor=False)
-config_path = join(data_dir, gpustack_config_name)
 
-legacy_data_dir = (
-    "/var/lib/gpustack"
-    if sys.platform == "darwin"
-    else join(data_dir, "log", "gpustack.log")
-)
 log_file_path = (
     "/var/log/gpustack.log"
     if sys.platform == "darwin"
@@ -37,7 +44,7 @@ gpustack_binary_name = "gpustack" if sys.platform == "darwin" else "gpustack.exe
 gpustack_binary_path = join(dirname(sys.executable), gpustack_binary_name)
 
 nssm_binary_path = (
-    join(dirname(sys.executable), "nssm.exe")
+    join(resource_path, "nssm.exe")
     if os.getenv("NSS_BINARY_PATH", None) is None
     else os.getenv("NSS_BINARY_PATH")
 )
@@ -73,15 +80,6 @@ def open_with_app(file_path: str) -> None:
     )
     app_command.append(file_path)
     subprocess.Popen(app_command)
-
-
-def get_lagecy_env_file() -> str:
-    if sys.platform == "darwin":
-        return "/etc/default/gpustack"
-    elif sys.platform == "win32":
-        return join(os.environ["APPDATA"], app_name, f"{app_name.lower()}.env")
-    else:
-        raise NotImplementedError("Unsupported platform")
 
 
 def _default_dac_parameters() -> Tuple[str, str, str]:
@@ -146,9 +144,6 @@ if __name__ == "__main__":
     print(f"Icon Path: {icon_path}")
     print(f"Data Directory: {data_dir}")
     print(f"Global Data Directory: {global_data_dir}")
-    print(f"Config Path: {config_path}")
-    print(f"Lagecy Data Directory: {legacy_data_dir}")
     print(f"Log File Path: {log_file_path}")
     print(f"GPUStack Binary Path: {gpustack_binary_path}")
-    print(f"Lagecy Env File: {get_lagecy_env_file()}")
     print(f"executable: {sys.executable}")

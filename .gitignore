@@ -166,3 +166,7 @@ test_*.py
 
 # openfst
 /openfst
+
+# wix generated files
+*.wixobj
+*.wixpdb

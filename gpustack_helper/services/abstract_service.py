@@ -3,8 +3,6 @@ from PySide6.QtCore import QProcess, QThread
 from enum import Flag, auto
 from typing import Union
 
-from gpustack_helper.config import HelperConfig
-
 
 class AbstractService(ABC):
     """
@@ -44,35 +42,28 @@ class AbstractService(ABC):
 
     @classmethod
     @abstractmethod
-    def start(cls, cfg: HelperConfig) -> Union[QProcess, QThread]:
+    def start(cls) -> Union[QProcess, QThread]:
         """
         Start the service. Override this method in subclasses to provide specific start logic.
         """
 
     @classmethod
     @abstractmethod
-    def stop(self, cfg: HelperConfig) -> Union[QProcess, QThread]:
+    def stop(self) -> Union[QProcess, QThread]:
         """
         Stop the service. Override this method in subclasses to provide specific stop logic.
         """
 
     @classmethod
     @abstractmethod
-    def restart(cls, cfg: HelperConfig) -> Union[QProcess, QThread]:
+    def restart(cls) -> Union[QProcess, QThread]:
         """
         Restart the service. Override this method in subclasses to provide specific restart logic.
         """
 
     @classmethod
     @abstractmethod
-    def get_current_state(cls, cfg: HelperConfig) -> State:
+    def get_current_state(cls) -> State:
         """
         Get the current state of the service. Override this method in subclasses to provide specific state retrieval logic.
-        """
-
-    @classmethod
-    @abstractmethod
-    def migrate(cls, cfg: HelperConfig) -> None:
-        """
-        Migrate the service if necessary. Override this method in subclasses to provide specific migration logic.
         """

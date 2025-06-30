@@ -4,7 +4,7 @@ dynamic = ["version"]
 
 [tool.poetry]
 name = "gpustack-helper"
-version = "0.0.0"
+version = "0.0.0.0"
 description = "The GPUStack Installer is a helper tool for installing and configuring GPUStack."
 authors = ["GPUStack Authors <contact@gpustack.ai>"]
 license = "Apache 2.0"
@@ -35,7 +35,7 @@ build-backend = "poetry.core.masonry.api"
 helper = "gpustack_helper.main:main"
 
 [tool.poetry-dynamic-versioning]
-enable = true
+enable = false
 vcs = "git"
 [tool.poetry-dynamic-versioning.from-file]
 source = 'gpustack_helper/_version.py'

@@ -13,7 +13,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtGui import QIntValidator
 from PySide6.QtCore import Qt, SignalInstance
 from gpustack_helper.databinder import DataBinder
-from gpustack_helper.config import HelperConfig, CleanConfig
+from gpustack_helper.config import HelperConfig, GPUStackConfig
 
 
 group_box_style = """
@@ -130,12 +130,12 @@ class DataBindWidget(QWidget):
         onSaveSignal.connect(self.on_save)
         pass
 
-    def on_show(self, cfg: HelperConfig, config: CleanConfig) -> None:
+    def on_show(self, cfg: HelperConfig, config: GPUStackConfig) -> None:
         for binder in self.config_binders:
             binder.load_config.emit(config)
         for binder in self.helper_binders:
             binder.load_config.emit(cfg)
 
     @abstractmethod
-    def on_save(self, cfg: HelperConfig, config: CleanConfig) -> None:
+    def on_save(self, cfg: HelperConfig, config: GPUStackConfig) -> None:
         pass

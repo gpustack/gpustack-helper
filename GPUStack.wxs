@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi" xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
+  <Product Id="*" Name="GPUStack" Language="1033" Version="$(var.ProductVersion)" Manufacturer="Seal Software Co., Ltd." UpgradeCode="36e9d56a-5daa-4543-9e37-d2539e22636c" Codepage="65001">
+    <Package InstallerVersion="500" Compressed="yes" InstallScope="perMachine" Platform="x64"/>
+
+    <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+    <MediaTemplate EmbedCab="yes" />
+
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramFilesFolder">
+        <Directory Id="INSTALLFOLDER" Name="GPUStack">
+        </Directory>
+      </Directory>
+      <Directory Id="ProgramMenuFolder">
+        <Directory Id="GPUStackProgramMenu" Name="GPUStack" />
+      </Directory>
+    </Directory>
+
+    <Feature Id="GPUStackAll" Level="1">
+      <ComponentGroupRef Id="ResourceFiles" />
+      <ComponentGroupRef Id="PyinstallerBuiltFiles" />
+    </Feature>
+
+    <DirectoryRef Id="GPUStackProgramMenu">
+      <Component Id="GPUStackShortcutComponent" Guid="b8e1c7e2-1c2a-4e2a-9e2b-1e2c7e2a1c2b">
+        <Shortcut Id="GPUStackStartMenuShortcut"
+                  Name="GPUStackHelper"
+                  Description="GPUStack Launcher"
+                  Target="[INSTALLFOLDER]gpustackhelper.exe"
+                  WorkingDirectory="INSTALLFOLDER" />
+        <RemoveFolder Id="RemoveGPUStackProgramMenu" Directory="GPUStackProgramMenu" On="uninstall" />
+        <RegistryValue Root="HKCU" Key="Software\Seal Software Co., Ltd.\GPUStack" Name="Installed" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+    </DirectoryRef>
+
+    <ComponentGroup Id="ResourceFiles">
+      <ComponentRef Id="GPUStackShortcutComponent" />
+    </ComponentGroup>
+
+    <Property Id="ARPPRODUCTICON" Value="InstallerIcon" />
+    <Icon Id="InstallerIcon" SourceFile="$(var.InstallationDir)\GPUStack.ico" />
+    <UIRef Id="WixUI_InstallDir" />
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+  </Product>
+</Wix>
