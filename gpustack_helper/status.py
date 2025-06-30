@@ -4,7 +4,11 @@ import socket
 from PySide6.QtGui import QAction, QActionGroup
 from PySide6.QtCore import Slot, Signal, QProcess, QThread
 from typing import Optional, Tuple, Union
-from gpustack_helper.config import HelperConfig
+from gpustack_helper.config import (
+    user_gpustack_config,
+    active_gpustack_config,
+    active_helper_config,
+)
 from gpustack_helper.common import create_menu_action, show_warning
 from gpustack_helper.services.abstract_service import AbstractService as service
 from gpustack_helper.services.factory import get_service_class
@@ -14,7 +18,6 @@ logger = logging.getLogger(__name__)
 
 class Status(QMenu):
     status_signal = Signal(service.State)
-    cfg: HelperConfig
     start_or_stop: QAction
     restart: QAction
 
@@ -38,8 +41,7 @@ class Status(QMenu):
 
     service_class: service = get_service_class()
 
-    def __init__(self, parent: QMenu, cfg: HelperConfig):
-        self.cfg = cfg
+    def __init__(self, parent: QMenu):
         self._status = service.State.UNKNOWN
         # --- status
         super().__init__(f"状态({service.get_display_text(self._status)})", parent)
@@ -81,6 +83,8 @@ class Status(QMenu):
                 self.status = state_to_change[1]
                 self.qprocess.deleteLater()
                 self.qprocess = None
+                active_gpustack_config().reload()
+                active_helper_config().reload()
 
             self.qprocess.finished.connect(on_thread_finish)
         elif isinstance(self.qprocess, QProcess):
@@ -96,6 +100,8 @@ class Status(QMenu):
                     self.status = state_to_change[0]
                 self.qprocess.deleteLater()
                 self.qprocess = None
+                active_gpustack_config().reload()
+                active_helper_config().reload()
 
             self.qprocess.finished.connect(on_process_finish)
         self.qprocess.start()
@@ -107,17 +113,17 @@ class Status(QMenu):
         # need to use launchctl to create service
         if status == service.State.STARTING:
             self.start_process(
-                self.service_class.start(self.cfg),
+                self.service_class.start(),
                 (service.State.STOPPED, service.State.STARTED),
             )
         elif status == service.State.RESTARTING:
             self.start_process(
-                self.service_class.restart(self.cfg),
+                self.service_class.restart(),
                 (service.State.STOPPED, service.State.STARTED),
             )
         elif status == service.State.STOPPING:
             self.start_process(
-                self.service_class.stop(self.cfg),
+                self.service_class.stop(),
                 (service.State.UNKNOWN, service.State.STOPPED),
             )
 
@@ -135,20 +141,18 @@ class Status(QMenu):
     @Slot()
     def start_or_stop_action(self):
         self.start_or_stop.setDisabled(True)
-        if (
-            not bool(self.status & service.State.TO_MIGRATE)
-            and bool(self.status & service.State.STOPPED)
-            and not self.is_port_available()
+        ok = True
+        if not bool(self.status & service.State.TO_MIGRATE) and bool(
+            self.status & service.State.STOPPED
         ):
-            config = self.cfg.user_gpustack_config
-            port = config.port
-            host = config.host
-            show_warning(
-                self,
-                "端口不可用",
-                f"无法启动服务，因为端口 {host}:{port} 已被占用。请检查是否有其他服务在运行。",
-            )
-        else:
+            host, port, ok = self.is_port_available()
+            if not ok:
+                show_warning(
+                    self,
+                    "端口不可用",
+                    f"无法启动服务，因为端口 {host}:{port} 已被占用。请检查是否有其他服务在运行。",
+                )
+        if ok:
             self.status = (
                 service.State.STARTING
                 if self.status & service.State.STOPPED
@@ -176,7 +180,9 @@ class Status(QMenu):
             elif isinstance(self.qprocess, QThread) and self.qprocess.isRunning():
                 logger.debug("Thread is running, skipping status update")
                 return
-        self.status = self.service_class.get_current_state(self.cfg)
+        active_gpustack_config().reload()
+        active_helper_config().reload()
+        self.status = self.service_class.get_current_state()
 
     @Slot()
     def wait_for_process_finish(self):
@@ -186,15 +192,15 @@ class Status(QMenu):
             elif isinstance(self.qprocess, QThread):
                 self.qprocess.wait()
 
-    def is_port_available(self) -> bool:
-        config = self.cfg.user_gpustack_config
+    def is_port_available(self) -> Tuple[str, int, bool]:
+        config = user_gpustack_config()
         port, _ = config.get_port()
-        host = config.host
+        host = config.host or '127.0.0.1'
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             try:
                 s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                 s.bind((host, port))
-                return True
+                return host, port, True
             except OSError as e:
                 logger.debug(f"端口 {host}:{port} 不可用: {e}")
-                return False
+                return host, port, False

@@ -11,7 +11,7 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import Qt, Slot, SignalInstance
 from typing import Tuple, List, Union
-from gpustack_helper.config import HelperConfig, CleanConfig
+from gpustack_helper.config import GPUStackConfig
 from gpustack_helper.quickconfig.common import (
     fixed_titled_input,
     fixed_titled_port_input,
@@ -56,7 +56,7 @@ class GeneralConfigPage(DataBindWidget):
         ):
             label, input = fixed_titled_input(title)
             self.config_binders.append(
-                CleanConfig.bind(attr, input, ignore_zero_value=True)
+                GPUStackConfig.bind(attr, input, ignore_zero_value=True)
             )
             setattr(self, attr, (label, input))
             rows.append((label, input))
@@ -67,7 +67,7 @@ class GeneralConfigPage(DataBindWidget):
         for _, (attr, title) in enumerate((("port", "服务端口:"),)):
             label, input = fixed_titled_port_input(title)
             self.config_binders.append(
-                CleanConfig.bind(attr, input, ignore_zero_value=True)
+                GPUStackConfig.bind(attr, input, ignore_zero_value=True)
             )
             setattr(self, attr, (label, input))
             rows.append((label, input))
@@ -84,7 +84,6 @@ class GeneralConfigPage(DataBindWidget):
 
     def __init__(
         self,
-        cfg: HelperConfig,
         onShowSignal: SignalInstance,
         onSaveSignal: SignalInstance,
     ):
@@ -121,5 +120,5 @@ class GeneralConfigPage(DataBindWidget):
             if key == "server":
                 server_button_index = index
         server_button = group.button(server_button_index)
-        self.config_binders.append(CleanConfig.bind("disable_worker", server_button))
+        self.config_binders.append(GPUStackConfig.bind("disable_worker", server_button))
         return group, radio_layout
