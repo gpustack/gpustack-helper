@@ -34,7 +34,8 @@ datas = [
     *collect_data_files('itn', include_py_files=True),
     *collect_data_files('audiotools'),
     (os.path.join(get_package_dir('whisper'), 'assets'), './whisper/assets'),
-    (dac_path, "./")
+    (dac_path, "./"),
+    (os.path.join(get_package_dir('vox_box.backends.tts'), 'cosyvoice_spk2info.pt'), './vox_box/backends/tts/'),
 ]
 
 # keep it for testing. Will be removed if ci is added.
@@ -58,6 +59,7 @@ for pkg in [
     'dia', 
     'pynini', 
     'dac',
+    'lxml',
     ]:
     pkg_datas = collect_all(pkg)
     datas += pkg_datas[0]
