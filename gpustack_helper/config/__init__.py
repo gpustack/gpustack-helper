@@ -230,7 +230,7 @@ def legacy_gpustack_config() -> Optional[GPUStackConfig]:
 
 def is_first_boot() -> bool:
     if sys.platform == "darwin":
-        return not os.path.exists(_user_helper_config.config_path)
+        return not os.path.exists(_active_helper_config.config_path)
     exists, _ = service_exists()
     return not exists
 

@@ -100,6 +100,11 @@ class GeneralConfigPage(DataBindWidget):
         self.setLayout(layout)
 
         self.group.button(0).setChecked(True)
+        labelMaxWidth = 0
+        for label, _ in (self.server_url, self.token, self.port):
+            labelMaxWidth = max(labelMaxWidth, label.sizeHint().width())
+        for label, _ in (self.server_url, self.token, self.port):
+            label.setMinimumWidth(labelMaxWidth)
 
     def _get_role_selection(self) -> Tuple[QButtonGroup, QHBoxLayout]:
         server_button_index = -1
