@@ -19,6 +19,7 @@
     <Feature Id="GPUStackAll" Level="1">
       <ComponentGroupRef Id="ResourceFiles" />
       <ComponentGroupRef Id="PyinstallerBuiltFiles" />
+      <ComponentRef Id="GPUStackService" />
     </Feature>
 
     <DirectoryRef Id="GPUStackProgramMenu">
@@ -41,5 +42,26 @@
     <Icon Id="InstallerIcon" SourceFile="$(var.InstallationDir)\GPUStack.ico" />
     <UIRef Id="WixUI_InstallDir" />
     <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+    <Component Id="GPUStackService" Guid="01228aaf-9d48-46ae-a2ec-8220022f9b95" Directory="INSTALLFOLDER">
+      <ServiceControl 
+        Id="StopGPUStack"
+        Name="GPUStack"
+        Stop="both"
+        Remove="uninstall"
+        Wait="yes" />
+        <RegistryValue Root="HKLM" Key="Software\Seal Software Co., Ltd.\GPUStack" Name="ServiceInstalled" Type="integer" Value="1" KeyPath="yes" />
+    </Component>
+    <CustomAction 
+      Id="KillGPUStackHelper" 
+      Directory="INSTALLFOLDER" 
+      ExeCommand="[SystemFolder]taskkill.exe /f /im gpustackhelper.exe" 
+      Execute="deferred" 
+      Return="ignore" 
+      Impersonate="no" />
+    <InstallExecuteSequence>
+        <Custom Action="KillGPUStackHelper" Before="RemoveFiles">
+            (UPGRADINGPRODUCTCODE AND NOT Installed) OR (REMOVE~="ALL" AND NOT UPGRADINGPRODUCTCODE  )
+        </Custom>
+    </InstallExecuteSequence>
   </Product>
 </Wix>
