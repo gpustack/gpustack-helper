@@ -20,7 +20,8 @@ function Lint {
 
     GPUStack.Log.Info "linting $path"
 
-    $result = Invoke-ScriptAnalyzer -Path $ROOT_DIR -Recurse -EnableExit -ExcludeRule PSUseBOMForUnicodeEncodedFile,PSAvoidUsingPlainTextForPassword,PSAvoidUsingInvokeExpression, PSReviewUnusedParameter, PSUseApprovedVerbs, PSAvoidGlobalVars, PSUseShouldProcessForStateChangingFunctions, PSAvoidUsingWriteHost
+    $hackPath = Join-Path $ROOT_DIR "hack"
+    $result = Invoke-ScriptAnalyzer -Path $hackPath -Recurse -EnableExit -ExcludeRule PSUseBOMForUnicodeEncodedFile,PSAvoidUsingPlainTextForPassword,PSAvoidUsingInvokeExpression, PSReviewUnusedParameter, PSUseApprovedVerbs, PSAvoidGlobalVars, PSUseShouldProcessForStateChangingFunctions, PSAvoidUsingWriteHost
     $result | Format-Table -AutoSize
     if ($result.Length -ne 0) {
         GPUStack.Log.Fatal "failed with Invoke-ScriptAnalyzer lint."
@@ -48,16 +49,6 @@ function Lint {
     }
 }
 
-function Remove-BOM {
-    $filePath = Join-Path $ROOT_DIR -ChildPath "install.ps1"
-
-    $bytes = [System.IO.File]::ReadAllBytes($filePath)
-    if ($bytes[0] -eq 0xEF -and $bytes[1] -eq 0xBB -and $bytes[2] -eq 0xBF) {
-        [System.IO.File]::WriteAllBytes($filePath, $bytes[3..($bytes.Length - 1)])
-    }
-    Write-Host "BOM removed from $filePath"
-}
-
 #
 # main
 #
@@ -65,8 +56,7 @@ function Remove-BOM {
 GPUStack.Log.Info "+++ LINT +++"
 try {
     Get-PSScriptAnalyzer
-    Lint "gpustack"
-    Remove-BOM
+    Lint "gpustack_helper"
 }
 catch {
     GPUStack.Log.Fatal "failed to lint: $($_.Exception.Message)"

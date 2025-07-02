@@ -72,7 +72,12 @@ function Get-GPUStackVersionVar {
 
     # 如果 GIT_VERSION 为 v0.0.0.0，尝试递增 patch 并拼接 build number
     if ($GIT_VERSION -eq "v0.0.0.0") {
-        $LAST_TAG = git describe --tags --abbrev=0 HEAD^ 2>$null
+        try {
+            $LAST_TAG = git describe --tags --abbrev=0 HEAD^ 2>$null
+        } catch {
+            $LAST_TAG = "v0.0.0.0"
+        }
+
         if (-not $LAST_TAG) {
             $LAST_TAG = "v0.0.0.0"
         }

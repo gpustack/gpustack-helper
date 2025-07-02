@@ -34,7 +34,9 @@ jobs:
         with:
           draft: true
           fail_on_unmatched_files: true
-          files: dist/gpustack-*
+          files: |
+            dist/gpustack-*
+            dist/*.msi
       - name: Copy to Tencent COS
         uses: ./.github/actions/copy-to-cos
         with:

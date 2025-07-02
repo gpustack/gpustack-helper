@@ -15,7 +15,7 @@ on:
       - "**.jpg"
       - "**.gif"
 jobs:
-  ci-macos:
+  ci:
     uses: ./.github/workflows/ci-common.yaml
     with:
       python-version: '3.10'
