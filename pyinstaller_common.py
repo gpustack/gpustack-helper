@@ -58,6 +58,7 @@ for pkg in [
     'matcha',
     'dia',
     'dac',
+    'transformers',
 ]:
     pkg_datas = collect_all(pkg)
     datas += pkg_datas[0]
