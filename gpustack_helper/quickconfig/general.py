@@ -42,10 +42,10 @@ class GeneralConfigPage(DataBindWidget):
             for widget in widgets:
                 widget.setEnabled(enable_status)
         self.token[self.INPUT_WIDGET_INDEX].setPlaceholderText(
-            '必填' if is_worker else '可选'
+            self.tr('Required') if is_worker else self.tr('Optional')
         )
         self.server_url[self.INPUT_WIDGET_INDEX].setPlaceholderText(
-            '必填' if is_worker else ''
+            self.tr('Required') if is_worker else ''
         )
 
     def _get_role_group(self, selection_layout: QLayout) -> QGroupBox:
@@ -60,18 +60,18 @@ class GeneralConfigPage(DataBindWidget):
             )
             setattr(self, attr, (label, input))
             rows.append((label, input))
-        return create_stand_box("服务角色", rows)
+        return create_stand_box(self.tr("Server Role"), rows)
 
     def _create_port_group(self) -> QGroupBox:
         rows: List[Union[QWidget, QLayout, Tuple[QLabel, NumericLineEdit]]] = list()
-        for _, (attr, title) in enumerate((("port", "服务端口:"),)):
+        for _, (attr, title) in enumerate((("port", "Port:"),)):
             label, input = fixed_titled_port_input(title)
             self.config_binders.append(
                 GPUStackConfig.bind(attr, input, ignore_zero_value=True)
             )
             setattr(self, attr, (label, input))
             rows.append((label, input))
-        return create_stand_box("端口配置", rows)
+        return create_stand_box(self.tr("Port Config"), rows)
 
     def on_show(self, cfg, config):
         super().on_show(cfg, config)

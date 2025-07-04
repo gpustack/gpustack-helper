@@ -29,15 +29,15 @@ class EnvironmentVariablePage(DataBindWidget):
         row_position = self.envvar.rowCount()
         self.envvar.insertRow(row_position)
 
-        # 第一列为可编辑下拉列表
+        # First column is an editable dropdown list
         combo = QComboBox()
         combo.setEditable(True)
         combo.addItems(
             ["HF_TOKEN", "HF_ENDPOINT", "HTTP_PROXY", "HTTPS_PROXY", "NO_PROXY"]
-        )  # 可根据需要自定义
+        )  # Customize as needed
         self.envvar.setCellWidget(row_position, 0, combo)
 
-        # 第二列为可编辑文本
+        # Second column is an editable text
         item = QTableWidgetItem()
         item.setFlags(item.flags() | Qt.ItemFlag.ItemIsEditable)
         self.envvar.setItem(row_position, 1, item)
@@ -45,7 +45,7 @@ class EnvironmentVariablePage(DataBindWidget):
     def remove_row(self):
         current_row = self.envvar.currentRow()
         if hasattr(self, "_home_row") and current_row == self._home_row:
-            return  # 禁止删除HOME行
+            return  # Prevent deleting HOME row
         if current_row >= 0:
             self.envvar.removeRow(current_row)
 
@@ -54,7 +54,7 @@ class EnvironmentVariablePage(DataBindWidget):
         if editor and isinstance(editor, QLineEdit):
             index = self.envvar.currentIndex()
             row, col = index.row(), index.column()
-            # 手动将 QLineEdit 的内容写回 QTableWidgetItem
+            # Manually write QLineEdit content back to QTableWidgetItem
             item = self.envvar.item(row, col)
             if item is not None:
                 item.setText(editor.text())
@@ -80,7 +80,7 @@ class EnvironmentVariablePage(DataBindWidget):
         add_button.setFixedSize(30, 30)
         add_button.clicked.connect(self.add_row)
 
-        # 删除按钮
+        # Delete button
         remove_button = QPushButton("-")
         remove_button.setFixedSize(30, 30)
         remove_button.clicked.connect(self.remove_row)
@@ -100,14 +100,14 @@ class EnvironmentVariablePage(DataBindWidget):
         for row in range(self.envvar.rowCount()):
             key_widget = self.envvar.cellWidget(row, 0)
             if isinstance(key_widget, QComboBox) and key_widget.currentText() == "HOME":
-                # 设置Value列不可编辑
+                # Set Value column to not editable
                 item = self.envvar.item(row, 1)
                 if item:
                     item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
-                # 设置Name列不可编辑
+                # Set Name column to not editable
                 key_widget.setEditable(False)
                 self.envvar.setRowHidden(row, True)
-                # 记录HOME行索引
+                # Record HOME row index
                 self._home_row = row
                 break
         else:

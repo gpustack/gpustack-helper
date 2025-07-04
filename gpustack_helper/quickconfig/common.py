@@ -11,7 +11,7 @@ from PySide6.QtWidgets import (
     QFormLayout,
 )
 from PySide6.QtGui import QIntValidator
-from PySide6.QtCore import Qt, SignalInstance
+from PySide6.QtCore import Qt, SignalInstance, QCoreApplication
 from gpustack_helper.databinder import DataBinder
 from gpustack_helper.config import HelperConfig, GPUStackConfig
 
@@ -51,7 +51,9 @@ class NumericLineEdit(QLineEdit):
         super().__init__(parent)
         self.validator = FixedUpValidator(parent=self, bottom=min_value, top=max_value)
         self.setValidator(self.validator)
-        self.setPlaceholderText("可选")
+        self.setPlaceholderText(
+            QCoreApplication.translate("GeneralConfigPage", "Optional")
+        )
 
     def value(self) -> Optional[int]:
         text = self.text().strip()

@@ -26,50 +26,50 @@ from gpustack_helper.status import Status
 from gpustack_helper.services.abstract_service import AbstractService as service
 
 list_widget_style = """
-    /* 整体列表样式 */
+    /* Main list style */
     QListWidget {
-        background-color: #f5f5f5;  /* 微信风格的浅灰色背景 */
+        background-color: #f5f5f5;  /* WeChat-style light gray background */
         border: none;
-        outline: none;             /* 移除焦点边框 */
-        font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif; /* 微信常用字体 */
+        outline: none;             /* Remove focus border */
+        font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif; /* Common WeChat fonts */
         font-size: 14px;
-        padding: 8px 0;           /* 上下留白 */
+        padding: 8px 0;           /* Top and bottom padding */
     }
 
-    /* 普通项目样式 */
+    /* Normal item style */
     QListWidget::item {
-        height: 44px;              /* 微信典型的项目高度 */
-        padding: 0 16px;           /* 左右内边距 */
+        height: 44px;              /* Typical WeChat item height */
+        padding: 0 16px;           /* Left and right padding */
         border: none;
         background-color: transparent;
-        color: #333333;            /* 主文字颜色 */
+        color: #333333;            /* Main text color */
     }
 
-    /* 悬停效果 - 微信风格的浅灰色背景 */
+    /* Hover effect - WeChat-style light gray background */
     QListWidget::item:hover {
         background-color: #ebebeb;
     }
 
-    /* 选中状态 - 微信风格的蓝色指示条 */
+    /* Selected state - WeChat-style blue indicator bar */
     QListWidget::item:selected {
-        background-color: #ffffff;  /* 选中项白色背景 */
-        color: #07C160;             /* 微信绿色文字 */
-        border-left: 3px solid #07C160; /* 左侧绿色指示条 */
-        padding-left: 13px;         /* 补偿边框宽度 */
-        font-weight: 500;           /* 中等加粗 */
+        background-color: #ffffff;  /* Selected item white background */
+        color: #07C160;             /* WeChat green text */
+        border-left: 3px solid #07C160; /* Left green indicator bar */
+        padding-left: 13px;         /* Compensate for border width */
+        font-weight: 500;           /* Medium bold */
     }
 
-    /* 选中且悬停状态 */
+    /* Selected and hovered state */
     QListWidget::item:selected:hover {
-        background-color: #f9f9f9;  /* 稍浅的背景 */
+        background-color: #f9f9f9;  /* Slightly lighter background */
     }
 
-    /* 移除默认的选中虚线框 */
+    /* Remove default selected dashed border */
     QListWidget::item:focus {
         outline: none;
     }
 
-    /* 滚动条样式 - 微信风格的简约滚动条 */
+    /* Scrollbar style - WeChat-style minimalist scrollbar */
     QListWidget::scroll-bar:vertical {
         width: 6px;
         background: transparent;
@@ -112,14 +112,20 @@ class QuickConfig(QDialog):
     def __init__(self, status: Status = None, *args):
         self.status = status
         super().__init__(*args)
-        self.setWindowTitle("快速配置")
+        self.setWindowTitle(self.tr("Quick Config"))
         if sys.platform != "darwin":
             self.setWindowIcon(QIcon.fromTheme(QIcon.ThemeIcon.DocumentPageSetup))
         self.setFixedSize(600, 400)
         self.stacked_widget = QStackedWidget()
         self.pages = (
-            ("通用", GeneralConfigPage(self.signalOnShow, self.signalOnSave)),
-            ("环境变量", EnvironmentVariablePage(self.signalOnShow, self.signalOnSave)),
+            (
+                self.tr("General"),
+                GeneralConfigPage(self.signalOnShow, self.signalOnSave),
+            ),
+            (
+                self.tr("Environments"),
+                EnvironmentVariablePage(self.signalOnShow, self.signalOnSave),
+            ),
         )
         list_widget = create_list(self.stacked_widget, *self.pages)
         confirm = self.config_confirm()
@@ -146,21 +152,21 @@ class QuickConfig(QDialog):
         )
         buttons.rejected.connect(self.reject)
         ok = buttons.button(QDialogButtonBox.StandardButton.Ok)
-        ok.setText("启动")
+        ok.setText(self.tr("Start"))
         ok.clicked.connect(self.save_and_start)
         cancel = buttons.button(QDialogButtonBox.StandardButton.Cancel)
-        cancel.setText("取消")
+        cancel.setText(self.tr("Cancel"))
 
         @Slot()
         def on_state_changed(new_state: service.State):
             if new_state & service.State.STARTED:
-                ok.setText("重启")
+                ok.setText(self.tr("Restart"))
                 ok.setEnabled(True)
             elif new_state & service.State.STOPPED:
-                ok.setText("启动")
+                ok.setText(self.tr("Start"))
                 ok.setEnabled(True)
             else:
-                ok.setText("启动")
+                ok.setText(self.tr("Start"))
                 ok.setEnabled(False)
 
         self.status.status_signal.connect(on_state_changed)

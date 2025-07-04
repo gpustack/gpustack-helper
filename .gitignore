@@ -170,3 +170,6 @@ test_*.py
 # wix generated files
 *.wixobj
 *.wixpdb
+
+#i18n
+/translations/*.qm
