@@ -3,7 +3,6 @@ from pydantic import BaseModel
 import winreg
 import logging
 import win32service
-import shlex
 from gpustack_helper.defaults import nssm_binary_path
 from gpustack_helper.config.backends import ModelBackend
 from gpustack_helper.databinder import set_nested_data
@@ -115,7 +114,7 @@ class RegistryModel(ModelBackend):
     ) -> None:
         binary_name: str = registry_data.get('Application')
         parameters: str = registry_data.get('AppParameters', 'start')
-        config_data["ProgramArguments"] = [binary_name] + shlex.split(parameters)
+        config_data["ProgramArguments"] = [binary_name] + parameters.split()
         env_list = registry_data.get("AppEnvironmentExtra", [])
         if isinstance(env_list, list):
             env_dict = {}
