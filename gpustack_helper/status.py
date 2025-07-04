@@ -2,8 +2,8 @@ import logging
 from PySide6.QtWidgets import QMenu
 import socket
 from PySide6.QtGui import QAction, QActionGroup
-from PySide6.QtCore import Slot, Signal, QProcess, QThread
-from typing import Optional, Tuple, Union
+from PySide6.QtCore import Slot, Signal, QProcess, QThread, QCoreApplication
+from typing import Optional, Tuple, Union, Dict
 from gpustack_helper.config import (
     user_gpustack_config,
     active_gpustack_config,
@@ -22,6 +22,7 @@ class Status(QMenu):
     restart: QAction
 
     _status: service.State = None
+    translations: Dict[str, str] = None
 
     @property
     def status(self) -> service.State:
@@ -44,15 +45,26 @@ class Status(QMenu):
     def __init__(self, parent: QMenu):
         self._status = service.State.UNKNOWN
         # --- status
-        super().__init__(f"状态({service.get_display_text(self._status)})", parent)
+        super().__init__(parent)
+        self.translations = {
+            "Start": QCoreApplication.translate("Status", "Start"),
+            "Stop": QCoreApplication.translate("Status", "Stop"),
+            "Restart": QCoreApplication.translate("Status", "Restart"),
+            "Status": QCoreApplication.translate("Status", "Status ({status})"),
+        }
+        self.setTitle(
+            self.translations["Status"].format(
+                status=service.get_display_text(self._status)
+            )
+        )
         parent.addMenu(self)
 
-        self.start_or_stop = create_menu_action("启动", self)
+        self.start_or_stop = create_menu_action(self.translations["Start"], self)
         self.start_or_stop.triggered.connect(self.start_or_stop_action)
         self.start_or_stop.setDisabled(True)
 
         self.addSeparator()
-        self.restart = create_menu_action("重新启动", self)
+        self.restart = create_menu_action(self.translations["Restart"], self)
         self.restart.setDisabled(True)
         self.restart.triggered.connect(self.restart_action)
 
@@ -79,7 +91,7 @@ class Status(QMenu):
         if isinstance(self.qprocess, QThread):
 
             def on_thread_finish():
-                logger.info("服务线程已成功完成")
+                logger.info("Service thread finished successfully")
                 self.status = state_to_change[1]
                 self.qprocess.deleteLater()
                 self.qprocess = None
@@ -91,12 +103,14 @@ class Status(QMenu):
 
             def on_process_finish(code: int, status: QProcess.ExitStatus):
                 if code == 0:
-                    logger.info("服务进程已成功完成")
+                    logger.info("Service process finished successfully")
                     self.status = state_to_change[1]
                 else:
                     stderr = bytes(self.qprocess.readAllStandardError()).decode()
                     stdout = bytes(self.qprocess.readAllStandardOutput()).decode()
-                    logger.error(f"服务进程失败: stdout: {stdout} stderr: {stderr}")
+                    logger.error(
+                        f"Service process failed: stdout: {stdout} stderr: {stderr}"
+                    )
                     self.status = state_to_change[0]
                 self.qprocess.deleteLater()
                 self.qprocess = None
@@ -109,7 +123,11 @@ class Status(QMenu):
     @Slot(service.State)
     def on_status_changed(self, status: service.State):
         self.update_title(status)
-        self.start_or_stop.setText("启动" if status & service.State.STOPPED else "停止")
+        self.start_or_stop.setText(
+            self.translations["Start"]
+            if status & service.State.STOPPED
+            else self.translations["Stop"]
+        )
         # need to use launchctl to create service
         if status == service.State.STARTING:
             self.start_process(
@@ -136,7 +154,10 @@ class Status(QMenu):
     def update_title(self, status: Optional[service.State] = None):
         if status is None:
             status = self.status
-        self.setTitle(f"状态({service.get_display_text(status)})")
+        title = QCoreApplication.translate("Status", "Status ({status})").format(
+            status=service.get_display_text(status)
+        )
+        self.setTitle(title)
 
     @Slot()
     def start_or_stop_action(self):
@@ -149,8 +170,8 @@ class Status(QMenu):
             if not ok:
                 show_warning(
                     self,
-                    "端口不可用",
-                    f"无法启动服务，因为端口 {host}:{port} 已被占用。请检查是否有其他服务在运行。",
+                    "Port Unavailable",
+                    f"Cannot start service because port {host}:{port} is already in use. Please check if another service is running.",
                 )
         if ok:
             self.status = (
@@ -202,5 +223,5 @@ class Status(QMenu):
                 s.bind((host, port))
                 return host, port, True
             except OSError as e:
-                logger.debug(f"端口 {host}:{port} 不可用: {e}")
+                logger.debug(f"Port {host}:{port} unavailable: {e}")
                 return host, port, False

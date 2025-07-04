@@ -44,6 +44,7 @@ datas = [
         os.path.join(get_package_dir('vox_box.backends.tts'), 'cosyvoice_spk2info.pt'),
         './vox_box/backends/tts/',
     ),
+    ("./translations/*.qm", "./translations"),
 ]
 
 download()

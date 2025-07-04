@@ -6,7 +6,12 @@ import os
 from gpustack.utils.process import add_signal_handlers
 from PySide6.QtWidgets import QApplication, QSystemTrayIcon, QMenu, QWidget
 from PySide6.QtGui import QAction, QDesktopServices, QIcon
-from PySide6.QtCore import Slot, QUrl, QTimer
+from PySide6.QtCore import (
+    Slot,
+    QUrl,
+    QTimer,
+    QCoreApplication,
+)
 from typing import Dict, Any, List
 import multiprocessing
 from gpustack_helper.databinder import DataBinder
@@ -31,6 +36,7 @@ from gpustack_helper.common import create_menu_action, show_warning
 from gpustack_helper.icon import get_icon
 from gpustack_helper.services.abstract_service import AbstractService as service
 from gpustack_helper.about import About
+from gpustack_helper.translator import init_translator
 
 logger = logging.getLogger(__name__)
 
@@ -56,13 +62,13 @@ def open_browser(parent: QWidget) -> None:
             hostname = "localhost"
         url = QUrl(f"http{'s' if is_tls else ''}://{hostname}:{port}")
 
-    # 使用默认浏览器打开URL
-    # TODO 如果打开不了的话需要弹出消息框
+    # Use default browser to open URL
+    # TODO: If it fails to open, a message box should pop up
     if not QDesktopServices.openUrl(url):
         show_warning(
             parent,
-            "打开浏览器失败",
-            f"无法打开 URL: {url.toString()}\n请检查您的默认浏览器设置。",
+            "Failed to open browser",
+            f"Unable to open URL: {url.toString()}\nPlease check your default browser settings.",
         )
 
 
@@ -96,20 +102,28 @@ class Configuration:
     def __init__(self, status: Status, parent: QMenu):
         parent.aboutToShow.connect(self.on_menu_shown)
 
-        self.boot_on_start = create_menu_action("开机启动", parent)
+        self.boot_on_start = create_menu_action(
+            QCoreApplication.translate("MainMenu", "Run at Startup"), parent
+        )
         self.boot_on_start.setCheckable(True)
         self.binders.append(HelperConfig.bind("RunAtLoad", self.boot_on_start))
         self.boot_on_start.toggled.connect(self.update_and_save)
 
         # 快速配置
         self.quick_config_dialog = QuickConfig(status)
-        self.quick_config = create_menu_action("快速配置", parent)
+        self.quick_config = create_menu_action(
+            QCoreApplication.translate("MainMenu", "Quick Config"), parent
+        )
         self.quick_config.triggered.connect(self.quick_config_dialog.show)
 
-        self.open_config = create_menu_action("配置目录", parent)
+        self.open_config = create_menu_action(
+            QCoreApplication.translate("MainMenu", "Config Directory"), parent
+        )
         self.open_config.triggered.connect(self.open_config_dir)
 
-        self.copy_token = create_menu_action("复制Token", parent)
+        self.copy_token = create_menu_action(
+            QCoreApplication.translate("MainMenu", "Copy Token"), parent
+        )
         self.copy_token.triggered.connect(self.copy_token_to_clipboard)
         self.copy_token.setDisabled(True)
         status.status_signal.connect(
@@ -154,12 +168,15 @@ class Configuration:
 
 def init_application() -> QApplication:
     app = QApplication(sys.argv)
+    # i18n
+    init_translator(app)
+
     normal_icon = get_icon(False)
     disabled_icon = get_icon(True)
     app.setQuitOnLastWindowClosed(False)
 
     tray_icon = QSystemTrayIcon(disabled_icon, parent=app, toolTip="GPUStack Helper")
-    # 创建主菜单
+    # Create main menu
     menu = QMenu()
     status = Status(menu)
 
@@ -168,7 +185,9 @@ def init_application() -> QApplication:
     )
     app.aboutToQuit.connect(status.wait_for_process_finish)
 
-    open_gpustack = create_menu_action("控制台", menu)
+    open_gpustack = create_menu_action(
+        QCoreApplication.translate("MainMenu", "Web Console"), menu
+    )
     open_gpustack.triggered.connect(lambda: open_browser(menu))
     open_gpustack.setDisabled(True)
     status.status_signal.connect(lambda x: widget_enabled_on_state(open_gpustack, x))
@@ -176,19 +195,21 @@ def init_application() -> QApplication:
 
     configure = Configuration(status, menu)
 
-    # 打开日志
-    log_action = create_menu_action("显示日志", menu)
+    # Open log
+    log_action = create_menu_action(
+        QCoreApplication.translate("MainMenu", "Show Log"), menu
+    )
     log_action.triggered.connect(open_log_dir)
     log_action.setDisabled(True)
     menu.addSeparator()
-    # 添加“关于”菜单项
-    about_action = QAction("关于", menu)
+    # Add "About" menu item
+    about_action = QAction(QCoreApplication.translate("MainMenu", "About"), menu)
     about = About()
     about_action.triggered.connect(lambda: about.show())
     menu.addAction(about_action)
 
-    # 添加退出菜单项
-    exit_action = QAction("退出", menu)
+    # Add exit menu item
+    exit_action = QAction(QCoreApplication.translate("MainMenu", "Exit"), menu)
     exit_action.triggered.connect(app.quit)
     menu.addAction(exit_action)
 

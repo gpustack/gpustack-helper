@@ -111,6 +111,18 @@ function Cleanup-UI {
     Remove-Item $marker -ErrorAction Ignore
 }
 
+function Build-I18n {
+    $tsPath = Join-Path $ROOT_DIR "translations/zh_CN.ts"
+    $qmPath = Join-Path $ROOT_DIR "translations/zh_CN.qm"
+    # 1. do release only
+    poetry run pyside6-lrelease $tsPath -qm $qmPath
+
+    # Compile English translations
+    $enTsPath = Join-Path $ROOT_DIR "translations/en_US.ts"
+    $enQmPath = Join-Path $ROOT_DIR "translations/en_US.qm"
+    poetry run pyside6-lrelease $enTsPath -qm $enQmPath
+}
+
 #
 # main
 #
@@ -119,6 +131,7 @@ GPUStack.Log.Info "+++ BUILD +++"
 try {
     Install-Dependency
     Download-UI
+    Build-I18n
     Build
     Cleanup-UI
 }

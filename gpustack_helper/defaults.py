@@ -30,6 +30,7 @@ resource_path = abspath(
     else join(dirname(abspath(__file__)), "..")
 )
 icon_path = join(resource_path, "tray_icon.png")
+translation_path = join(resource_path, "translations")
 
 data_dir = user_data_dir(helper_name, appauthor=False, roaming=True)
 global_data_dir = site_data_dir(app_name, appauthor=False)

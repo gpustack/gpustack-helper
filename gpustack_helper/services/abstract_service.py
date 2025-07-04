@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from PySide6.QtCore import QProcess, QThread
 from enum import Flag, auto
 from typing import Union
+from PySide6.QtCore import QCoreApplication
 
 
 class AbstractService(ABC):
@@ -23,14 +24,25 @@ class AbstractService(ABC):
     @classmethod
     def get_display_text(cls, state: State) -> str:
         display_text = {
-            cls.State.STOPPED | cls.State.TO_MIGRATE: "待升级",
-            cls.State.STOPPED: "停止",
-            cls.State.STOPPING: "停止中",
-            cls.State.RESTARTING: "重新启动中",
-            cls.State.STARTING: "启动中",
-            cls.State.TO_SYNC: "待重启",
-            cls.State.UNKNOWN: "未知",
-            cls.State.STARTED: "运行中",
+            cls.State.STOPPED
+            | cls.State.TO_MIGRATE: QCoreApplication.translate(
+                "AbstractService", "To Upgrade"
+            ),
+            cls.State.STOPPED: QCoreApplication.translate("AbstractService", "Stopped"),
+            cls.State.STOPPING: QCoreApplication.translate(
+                "AbstractService", "Stopping"
+            ),
+            cls.State.RESTARTING: QCoreApplication.translate(
+                "AbstractService", "Restarting"
+            ),
+            cls.State.STARTING: QCoreApplication.translate(
+                "AbstractService", "Starting"
+            ),
+            cls.State.TO_SYNC: QCoreApplication.translate(
+                "AbstractService", "To Restart"
+            ),
+            cls.State.UNKNOWN: QCoreApplication.translate("AbstractService", "Unknown"),
+            cls.State.STARTED: QCoreApplication.translate("AbstractService", "Running"),
         }
         if display_text.get(state, None) is not None:
             return display_text[state]
@@ -38,7 +50,11 @@ class AbstractService(ABC):
         for key, value in display_text.items():
             if (state & key) == key:
                 texts.append(value)
-        return "|".join(texts) if texts else "未知状态"
+        return (
+            "|".join(texts)
+            if texts
+            else QCoreApplication.translate("AbstractService", "Unknown")
+        )
 
     @classmethod
     @abstractmethod
