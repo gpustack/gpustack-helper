@@ -74,15 +74,10 @@ def _relocate_legacy_files() -> None:
 def _sync_configs() -> None:
     # apply config as we run as root in windows
     gpustack_user = user_gpustack_config()
+    gpustack_user.reload()
     gpustack_active = active_gpustack_config()
-    config_data = {}
-    if gpustack_user.model_dump(exclude_defaults=True) != gpustack_active.model_dump(
-        exclude_defaults=True
-    ):
-        config_data.update(user_gpustack_config().model_dump(exclude_defaults=True))
-    gpustack_active.update_with_lock(
-        **config_data,
-    )
+    shutil.copy(gpustack_user.config_path, gpustack_active.config_path)
+    gpustack_active.reload()
     _relocate_legacy_files()
     helper_legacy = legacy_helper_config()
     config_data = active_helper_config().model_dump()
