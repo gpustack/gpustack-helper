@@ -24,6 +24,8 @@ table_style = """
 
 class EnvironmentVariablePage(DataBindWidget):
     envvar: QTableWidget = None
+    remove_button: QPushButton = None
+    add_button: QPushButton = None
 
     def add_row(self):
         row_position = self.envvar.rowCount()
@@ -76,23 +78,29 @@ class EnvironmentVariablePage(DataBindWidget):
         main_layout.addWidget(table)
         self.envvar = table
 
-        add_button = QPushButton("+")
-        add_button.setFixedSize(30, 30)
-        add_button.clicked.connect(self.add_row)
+        self.add_button = QPushButton("+")
+        self.add_button.setFixedSize(30, 30)
+        self.add_button.clicked.connect(self.add_row)
 
         # Delete button
-        remove_button = QPushButton("-")
-        remove_button.setFixedSize(30, 30)
-        remove_button.clicked.connect(self.remove_row)
+        self.remove_button = QPushButton("-")
+        self.remove_button.setFixedSize(30, 30)
+        self.remove_button.clicked.connect(self.remove_row)
+        self.remove_button.setEnabled(False)
 
         button_layout = QHBoxLayout()
-        button_layout.addWidget(add_button)
-        button_layout.addWidget(remove_button)
+        button_layout.addWidget(self.add_button)
+        button_layout.addWidget(self.remove_button)
         button_layout.addStretch()
         main_layout.addLayout(button_layout)
 
         self.helper_binders.append(
             HelperConfig.bind("EnvironmentVariables", self.envvar)
+        )
+
+        self.envvar.currentCellChanged.connect(self.on_table_selection_changed)
+        self.envvar.selectionModel().selectionChanged.connect(
+            self.on_table_selection_changed_selection
         )
 
     def on_show(self, cfg, config):
@@ -112,3 +120,14 @@ class EnvironmentVariablePage(DataBindWidget):
                 break
         else:
             self._home_row = None
+
+    def on_table_selection_changed(
+        self, currentRow, currentColumn, previousRow, previousColumn
+    ):
+        # 只有选中有效行时才可用
+        self.remove_button.setEnabled(currentRow >= 0)
+
+    def on_table_selection_changed_selection(self, selected, deselected):
+        # 没有选中任何行时禁用
+        indexes = self.envvar.selectedIndexes()
+        self.remove_button.setEnabled(bool(indexes))
