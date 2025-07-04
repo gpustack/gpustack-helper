@@ -108,17 +108,41 @@ def _ensure_log_dir() -> None:
                 raise
 
 
+def _wait_for_service_status_with_timeout(
+    service_handle, expected_status, timeout=10
+) -> None:
+    import time
+
+    start_time = time.time()
+    while True:
+        status = win32service.QueryServiceStatus(service_handle)[1]
+        if status == expected_status:
+            break
+        if time.time() - start_time > timeout:
+            logger.warning(f"Timeout waiting for service {service_name} to stop.")
+            raise TimeoutError(f"Timeout waiting for service {service_name} to stop.")
+        time.sleep(0.5)
+    logger.info(
+        f"Service {service_name} is now in the expected status: {expected_status}."
+    )
+
+
 def _start_windows_service() -> None:
     _sync_configs()
     _ensure_log_dir()
     try:
         scm = win32service.OpenSCManager(None, None, win32service.SC_MANAGER_ALL_ACCESS)
         service_handle = win32service.OpenService(
-            scm, service_name, win32service.SERVICE_START
+            scm,
+            service_name,
+            win32service.SERVICE_START | win32service.SERVICE_QUERY_STATUS,
         )
 
         # Start service
         win32service.StartService(service_handle, None)
+        _wait_for_service_status_with_timeout(
+            service_handle, win32service.SERVICE_RUNNING, timeout=10
+        )
         win32service.CloseServiceHandle(service_handle)
     except Exception as e:
         logger.error(f"Exception occurred: {e}")
@@ -127,7 +151,9 @@ def _start_windows_service() -> None:
             win32service.CloseServiceHandle(scm)
 
 
-def _stop_windows_service() -> None:
+def _stop_windows_service(timeout=10) -> None:
+    scm = None
+    service_handle = None
     try:
         scm = win32service.OpenSCManager(None, None, win32service.SC_MANAGER_ALL_ACCESS)
         service_handle = win32service.OpenService(
@@ -140,12 +166,16 @@ def _stop_windows_service() -> None:
             logger.info(f"Service {service_name} is already stopped.")
             win32service.CloseServiceHandle(service_handle)
             return
+        logger.info(f"Stopping service {service_name}...")
         win32service.ControlService(service_handle, win32service.SERVICE_CONTROL_STOP)
-        win32service.CloseServiceHandle(service_handle)
-        logger.info(f"Service {service_name} stopped.")
+        _wait_for_service_status_with_timeout(
+            service_handle, win32service.SERVICE_STOPPED, timeout=timeout
+        )
     except Exception as e:
         logger.error(f"Failed to stop service: {e}")
     finally:
+        if service_handle is not None:
+            win32service.CloseServiceHandle(service_handle)
         if scm is not None:
             win32service.CloseServiceHandle(scm)
 
@@ -153,9 +183,6 @@ def _stop_windows_service() -> None:
 def _restart_windows_service() -> None:
     try:
         _stop_windows_service()
-        import time
-
-        time.sleep(2)  # 等待服务完全停止
         _start_windows_service()
         logger.info(f"Service {service_name} restarted.")
     except Exception as e:
