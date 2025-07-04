@@ -195,7 +195,7 @@ class GPUStackConfig(Config):
             return None
         if self.token is not None:
             return self.token
-        with open(self.active_token_path, "r") as f:
+        with open(self.token_path, "r") as f:
             token = f.read().strip()
             if token:
                 return token
