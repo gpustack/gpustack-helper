@@ -76,6 +76,7 @@ def _sync_configs() -> None:
     gpustack_user = user_gpustack_config()
     gpustack_user.reload()
     gpustack_active = active_gpustack_config()
+    os.makedirs(os.path.dirname(gpustack_active.config_path), exist_ok=True)
     shutil.copy(gpustack_user.config_path, gpustack_active.config_path)
     gpustack_active.reload()
     _relocate_legacy_files()
@@ -83,9 +84,12 @@ def _sync_configs() -> None:
     config_data = active_helper_config().model_dump()
     if helper_legacy:
         helper_active = active_helper_config()
-        config_data["ProgramArguments"] = helper_active
+        config_data["ProgramArguments"] = helper_active.default_program_arguments
         config_data["data_dir"] = active_helper_config().data_dir
         config_data["nssm_path"] = str(nssm_binary_path)
+        helper_active.update_with_lock(**config_data)
+    if helper_active.ProgramArguments != helper_active.default_program_arguments:
+        config_data["ProgramArguments"] = helper_active.default_program_arguments
         helper_active.update_with_lock(**config_data)
 
 
