@@ -72,44 +72,38 @@ function gpustack::version::get_version_vars() {
 
     # specify to v0.0.0 if the tree is dirty.
     if [[ "${GIT_TREE_STATE:-dirty}" == "dirty" ]]; then
-      GIT_VERSION="v0.0.0.0"
-    elif ! [[ "${GIT_VERSION}" =~ ^v([0-9]+)\.([0-9]+)(\.[0-9]+)?(\.[0-9]+)? ]]; then
-      GIT_VERSION="v0.0.0.0"
+      GIT_VERSION="v0.0.0"
+    elif ! [[ "${GIT_VERSION}" =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+      GIT_VERSION="v0.0.0"
     fi
 
     # respect specified version
     GIT_VERSION=${VERSION:-${GIT_VERSION}}
   fi
 
-  if [[ "${GIT_VERSION}" == "v0.0.0.0" ]]; then
+  if [[ "${GIT_VERSION}" == "v0.0.0" ]]; then
     LAST_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || true)
     if [[ -z "${LAST_TAG}" ]]; then
-      LAST_TAG="v0.0.0.0"
+      LAST_TAG="v0.0.0"
     fi
-    # Keep 3 digits of the version number, and calculate the fourth digit with github.run_number
-    if [[ "${LAST_TAG}" =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+    # Only keep three-digit version number, patch increases in steps of 100 and appends the last two digits of GITHUB_RUN_NUMBER
+    if [[ "${LAST_TAG}" =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
       major="${BASH_REMATCH[1]}"
       minor="${BASH_REMATCH[2]}"
-      patch="${BASH_REMATCH[3]}"
-      build="${BASH_REMATCH[4]}"
-      # the build number must >=100 with 100 per step. but we don't need to validate it here.
-      # the run_number will mod 100 and add to build.
-      new_build=$((build + (${GITHUB_RUN_NUMBER:-99} % 100)))
-      if [ "$new_build" -eq "$build" ]; then
-        build=$((new_build + 100))
-      else
-        build=${new_build}
+      patch_base="${BASH_REMATCH[3]}"
+      run_number=${GITHUB_RUN_NUMBER:-99}
+      patch_mod=$((run_number % 100))
+      new_patch=$((patch_base + patch_mod))
+      if [ "$new_patch" -eq "$patch_base" ]; then
+        new_patch=$((patch_base + 100))
       fi
-      GIT_VERSION="v${major}.${minor}.${patch}.${build}"
-    elif [[ "${LAST_TAG}" =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
-      major="${BASH_REMATCH[1]}"
-      minor="${BASH_REMATCH[2]}"
-      patch="${BASH_REMATCH[3]}"
-      # set to the maximum build number if not specified.
-      build="${GITHUB_RUN_NUMBER:-999}"
-      GIT_VERSION="v${major}.${minor}.${patch}.${build}"
+      GIT_VERSION="v${major}.${minor}.${new_patch}"
     else
-      GIT_VERSION="v0.0.1.${GITHUB_RUN_NUMBER:-999}"
+      # If no tag, patch=1, patch_base=0
+      run_number=${GITHUB_RUN_NUMBER:-99}
+      patch_mod=$((run_number % 100))
+      patch=$((1 + patch_mod))
+      GIT_VERSION="v0.0.${patch}"
     fi
   fi
 }

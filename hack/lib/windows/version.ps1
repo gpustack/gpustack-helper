@@ -54,9 +54,9 @@ function Get-GPUStackVersionVar {
             }
         }
 
-        # Set version to 'v0.0.0.0' if the tree is dirty or version format does not match
-        if ($GIT_TREE_STATE -eq "dirty" -or -not ($GIT_VERSION -match '^v([0-9]+)\.([0-9]+)(\.[0-9]+)?(-?[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$')) {
-            $GIT_VERSION = "v0.0.0.0"
+        # Set version to 'v0.0.0' if the tree is dirty or version format does not match
+        if ($GIT_TREE_STATE -eq "dirty" -or -not ($GIT_VERSION -match '^v([0-9]+)\.([0-9]+)\.([0-9]+)$')) {
+            $GIT_VERSION = "v0.0.0"
         }
 
         # Respect specified version
@@ -70,40 +70,34 @@ function Get-GPUStackVersionVar {
     $global:GIT_COMMIT = $GIT_COMMIT
     $global:GIT_VERSION = $GIT_VERSION
 
-    # 如果 GIT_VERSION 为 v0.0.0.0，尝试递增 patch 并拼接 build number
-    if ($GIT_VERSION -eq "v0.0.0.0") {
+    # If GIT_VERSION is v0.0.0, try to increment patch and append GITHUB_RUN_NUMBER
+    if ($GIT_VERSION -eq "v0.0.0") {
         try {
             $LAST_TAG = git describe --tags --abbrev=0 HEAD^ 2>$null
         } catch {
-            $LAST_TAG = "v0.0.0.0"
+            $LAST_TAG = "v0.0.0"
         }
 
         if (-not $LAST_TAG) {
-            $LAST_TAG = "v0.0.0.0"
+            $LAST_TAG = "v0.0.0"
         }
         $GITHUB_RUN_NUMBER = $env:GITHUB_RUN_NUMBER
-        if (-not $GITHUB_RUN_NUMBER) { $GITHUB_RUN_NUMBER = "999" }
-        if ($LAST_TAG -match '^v([0-9]+)\.([0-9]+)\.([0-9]+)\.([0-9]+)$') {
+        if (-not $GITHUB_RUN_NUMBER) { $GITHUB_RUN_NUMBER = "99" }
+        if ($LAST_TAG -match '^v([0-9]+)\.([0-9]+)\.([0-9]+)$') {
             $major = $matches[1]
             $minor = $matches[2]
-            $patch = $matches[3]
-            $build = $matches[4]
-            if (-not $env:GITHUB_RUN_NUMBER) { $GITHUB_RUN_NUMBER = "99" }
-            $new_build = [int]$build + ([int]$GITHUB_RUN_NUMBER % 100)
-            if ($new_build -eq [int]$build) {
-                $build = $new_build + 100
-            } else {
-                $build = $new_build
+            $patch_base = [int]$matches[3]
+            $patch_mod = [int]$GITHUB_RUN_NUMBER % 100
+            $new_patch = $patch_base + $patch_mod
+            if ($new_patch -eq $patch_base) {
+                $new_patch = $patch_base + 100
             }
-            $GIT_VERSION = "v$major.$minor.$patch.$build"
-        } elseif ($LAST_TAG -match '^v([0-9]+)\.([0-9]+)\.([0-9]+)$') {
-            $major = $matches[1]
-            $minor = $matches[2]
-            $patch = $matches[3]
-            $build = $GITHUB_RUN_NUMBER
-            $GIT_VERSION = "v$major.$minor.$patch.$build"
+            $GIT_VERSION = "v$major.$minor.$new_patch"
         } else {
-            $GIT_VERSION = "v0.0.1.$GITHUB_RUN_NUMBER"
+            # If no tag, patch=1+mod
+            $patch_mod = [int]$GITHUB_RUN_NUMBER % 100
+            $patch = 1 + $patch_mod
+            $GIT_VERSION = "v0.0.$patch"
         }
         $global:GIT_VERSION = $GIT_VERSION
     }
