@@ -53,9 +53,6 @@ function Download-UI {
         & "$env:WINDIR/System32/tar" -xzf $tmpFile -C (Join-Path $tmpUIPath "ui")
         $downloaded = $true
     } catch {
-        if ($tag -match '^v([0-9]+)\.([0-9]+)(\.[0-9]+)?(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$') {
-            GPUStack.Log.Fatal "failed to download '$tag' ui archive"
-        }
         GPUStack.Log.Warn "failed to download '$tag' ui archive, fallback to '$defaultTag' ui archive"
         $url = "https://gpustack-ui-1303613262.cos.accelerate.myqcloud.com/releases/$defaultTag.tar.gz"
         try {

@@ -34,10 +34,6 @@ function download_ui() {
   if ! curl --retry 3 --retry-connrefused --retry-delay 3 -sSfL "https://gpustack-ui-1303613262.cos.accelerate.myqcloud.com/releases/${tag}.tar.gz" 2>/dev/null |
     tar -xzf - --directory "${tmp_ui_path}/ui" 2>/dev/null; then
 
-    if [[ "${tag:-}" =~ ^v([0-9]+)\.([0-9]+)(\.[0-9]+)?(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$ ]]; then
-      gpustack::log::fatal "failed to download '${tag}' ui archive"
-    fi
-
     gpustack::log::warn "failed to download '${tag}' ui archive, fallback to '${default_tag}' ui archive"
     if ! curl --retry 3 --retry-connrefused --retry-delay 3 -sSfL "https://gpustack-ui-1303613262.cos.accelerate.myqcloud.com/releases/${default_tag}.tar.gz" |
       tar -xzf - --directory "${tmp_ui_path}/ui" 2>/dev/null; then
