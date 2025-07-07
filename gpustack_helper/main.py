@@ -235,6 +235,15 @@ def init_application() -> QApplication:
     return app
 
 
+def setup_color_scheme():
+    from PySide6.QtGui import QGuiApplication
+    from PySide6.QtCore import Qt
+
+    style = QGuiApplication.styleHints()
+    style.setColorScheme(Qt.ColorScheme.Light)
+    style.colorSchemeChanged.connect(lambda: style.setColorScheme(Qt.ColorScheme.Light))
+
+
 def main():
     # Let Ctrl+C terminate the program
     add_signal_handlers()
@@ -265,6 +274,7 @@ def main():
     init_config(args)
     app = init_application()
     ensure_data_dir()
+    setup_color_scheme()
     sys.exit(app.exec())
 
 
