@@ -156,6 +156,20 @@ jobs:
           version: 1.8.3
           plugins: |
             poetry-dynamic-versioning
+      - name: Cache LlamaBox
+        id: cache-llama-box
+        uses: actions/cache@v3
+        with:
+          path: |
+            build/cache
+          key: ${{ runner.os }}-llama-box-${{ hashFiles('**/poetry.lock') }}-${{ inputs.windows-toolkit-name || '' }}
+
+      - name: Conditionally set TOOLKIT_NAME
+        shell: bash
+        run: |
+          if [ -n "${{ inputs.windows-toolkit-name }}" ]; then
+            echo "TOOLKIT_NAME=${{ inputs.windows-toolkit-name }}" >> $GITHUB_ENV
+          fi
 
       - name: CI
         run: |
