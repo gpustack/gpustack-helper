@@ -16,6 +16,7 @@ LLAMA_BOX_DOWNLOAD_REPO = os.getenv("LLAMA_BOX_DOWNLOAD_REPO", f"gpustack/{LLAMA
 PREFERRED_BASE_URL = os.getenv("PREFERRED_BASE_URL", None)
 VERSION_URL_PREFIX = f"{LLAMA_BOX_DOWNLOAD_REPO}/releases/download/{LLAMA_BOX_VERSION}"
 TARGET_PREFIX = f"dl-{LLAMA_BOX}-{system()}-{arch()}-"
+TOOLKIT_NAME = os.getenv("TOOLKIT_NAME", None)
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +47,7 @@ def get_toolkit_name(device: str) -> str:
     if device in device_toolkit_mapper:
         return device_toolkit_mapper[device]
     else:
-        return device
+        return ""
 
 
 def split_filename(file_name: str) -> Tuple[str, str]:
@@ -74,7 +75,7 @@ def verify_file_checksum(file_path: str, expected_checksum: str) -> bool:
 
 
 def download_checksum(
-    manager: ToolsManager, tmp_dir: Path, BaseURL: str
+    manager: ToolsManager, tmp_dir: Path
 ) -> Dict[str, Tuple[str, str, str]]:
     """
     return the directory for the llama-box files and their checksums.
@@ -131,27 +132,35 @@ def download_and_extract(manager: ToolsManager, file_path: Path, checksum: str) 
 
 
 def download_llama_box(manager: ToolsManager):
+    if TOOLKIT_NAME is None:
+        logger.info(
+            "TOOLKIT_NAME environment variable is not set, skipping llama-box download."
+        )
+        return
     target_dir = manager.third_party_bin_path / LLAMA_BOX
     llama_box_tmp_dir = target_dir / f"tmp-{LLAMA_BOX}"
     if os.path.exists(llama_box_tmp_dir):
         shutil.rmtree(llama_box_tmp_dir)
     os.makedirs(llama_box_tmp_dir, exist_ok=True)
-    files_checksum = download_checksum(manager, llama_box_tmp_dir, PREFERRED_BASE_URL)
-    for toolkit, (_, file_name, checksum) in files_checksum.items():
-        file_path = (
-            llama_box_tmp_dir
-            / f"{LLAMA_BOX}-{LLAMA_BOX_VERSION}-{system()}-{arch()}-{toolkit}"
-            / file_name
+    files_checksum = download_checksum(manager, llama_box_tmp_dir)
+    if TOOLKIT_NAME not in files_checksum:
+        raise ValueError(
+            f"Required toolkit '{TOOLKIT_NAME}' not found in the checksum file."
         )
-        try:
-            os.makedirs(file_path.parent, exist_ok=True)
-            logger.info(f"Downloading {file_path.parent.name} '{LLAMA_BOX_VERSION}'")
-            versioned_dir = download_and_extract(manager, file_path, checksum)
-            shutil.move(versioned_dir, target_dir)
-            manager._update_versions_file(versioned_dir.name, LLAMA_BOX_VERSION)
+    _, file_name, checksum = files_checksum[TOOLKIT_NAME]
+    basedir = f"{LLAMA_BOX}-{LLAMA_BOX_VERSION}-{system()}-{arch()}"
+    if TOOLKIT_NAME != "":
+        basedir += f"-{TOOLKIT_NAME}"
+    file_path = llama_box_tmp_dir / basedir / file_name
+    try:
+        os.makedirs(file_path.parent, exist_ok=True)
+        logger.info(f"Downloading {file_path.parent.name} '{LLAMA_BOX_VERSION}'")
+        versioned_dir = download_and_extract(manager, file_path, checksum)
+        shutil.move(versioned_dir, target_dir)
+        manager._update_versions_file(versioned_dir.name, LLAMA_BOX_VERSION)
 
-        except Exception as e:
-            raise RuntimeError(f"Failed to download or verify {file_name}: {e}")
+    except Exception as e:
+        raise RuntimeError(f"Failed to download or verify {file_name}: {e}")
 
     # remove tmp dir
     if os.path.exists(llama_box_tmp_dir):
@@ -161,8 +170,6 @@ def download_llama_box(manager: ToolsManager):
 def download():
     manager = ToolsManager()
     try:
-        # cleanup third_party bin path
-        manager.remove_cached_tools()
         manager.download_fastfetch()
         manager.download_gguf_parser()
         download_llama_box(manager)
