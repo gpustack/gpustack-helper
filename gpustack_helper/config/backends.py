@@ -103,7 +103,7 @@ class FileConfigModel(ModelBackend):
         try:
             with open(self.filepath, "rb") as f:
                 content = self._encoder.decode_from_data(f)
-                set_nested_data(self.model, content)
+                set_nested_data(self.model, content, reset_default=True)
         except Exception as e:
             logger.error(f"Failed to reload configuration: {e}")
 

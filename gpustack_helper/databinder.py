@@ -222,9 +222,20 @@ def get_nested_field_value(
         return default
 
 
+def reset_model_to_default(model: BaseModel):
+    # Pydantic v2
+    for name, field in model.__class__.model_fields.items():
+        if field.default is not None:
+            value = field.default
+        elif field.default_factory is not None:
+            value = field.default_factory()
+        else:
+            continue
+        setattr(model, name, value)
+
+
 def set_nested_data(
-    model: BaseModel,
-    data: Dict[str, Any],
+    model: BaseModel, data: Dict[str, Any], reset_default: bool = False
 ) -> bool:
     """
     Recursively update the contents of a dict into a nested Pydantic BaseModel instance
@@ -237,6 +248,8 @@ def set_nested_data(
         bool: Whether all updates succeeded
     """
     try:
+        if reset_default:
+            reset_model_to_default(model)
         for key, value in data.items():
             if not hasattr(model, key):
                 continue  # 跳过不存在的字段

@@ -201,6 +201,7 @@ class Status(QMenu):
             elif isinstance(self.qprocess, QThread) and self.qprocess.isRunning():
                 logger.debug("Thread is running, skipping status update")
                 return
+        user_gpustack_config().reload()
         active_gpustack_config().reload()
         active_helper_config().reload()
         self.status = self.service_class.get_current_state()
