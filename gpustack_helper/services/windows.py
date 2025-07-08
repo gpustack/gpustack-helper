@@ -82,8 +82,8 @@ def _sync_configs() -> None:
     _relocate_legacy_files()
     helper_legacy = legacy_helper_config()
     config_data = active_helper_config().model_dump()
+    helper_active = active_helper_config()
     if helper_legacy:
-        helper_active = active_helper_config()
         config_data["ProgramArguments"] = helper_active.default_program_arguments
         config_data["data_dir"] = active_helper_config().data_dir
         config_data["nssm_path"] = str(nssm_binary_path)
