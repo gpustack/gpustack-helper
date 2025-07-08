@@ -2,9 +2,10 @@ import os
 import shutil
 import re
 import logging
+import requests
 from packaging.version import parse
 from pathlib import Path
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Optional
 from gpustack.worker.tools_manager import ToolsManager, BUILTIN_LLAMA_BOX_VERSION
 from gpustack.utils.platform import system, arch, DeviceTypeEnum
 from importlib.resources import files
@@ -17,6 +18,7 @@ PREFERRED_BASE_URL = os.getenv("PREFERRED_BASE_URL", None)
 VERSION_URL_PREFIX = f"{LLAMA_BOX_DOWNLOAD_REPO}/releases/download/{LLAMA_BOX_VERSION}"
 TARGET_PREFIX = f"dl-{LLAMA_BOX}-{system()}-{arch()}-"
 TOOLKIT_NAME = os.getenv("TOOLKIT_NAME", None)
+ALL_TOOLKIT_NAME = "__all__"  # Special value to indicate all toolkits
 
 logger = logging.getLogger(__name__)
 
@@ -74,9 +76,17 @@ def verify_file_checksum(file_path: str, expected_checksum: str) -> bool:
     return sha256_hash.hexdigest() == expected_checksum
 
 
-def download_checksum(
-    manager: ToolsManager, tmp_dir: Path
-) -> Dict[str, Tuple[str, str, str]]:
+def split_checksum_line(line: str) -> Optional[Tuple[str, str, str]]:
+    pair = re.split(r"\s+", line.strip(), 1)
+    if len(pair) != 2:
+        return None
+    if not pair[1].startswith(TARGET_PREFIX):
+        return None
+
+    return pair[0], pair[1]
+
+
+def download_checksum(manager: ToolsManager) -> Dict[str, Tuple[str, str, str]]:
     """
     return the directory for the llama-box files and their checksums.
     Will be filtered by version, os and arch.
@@ -84,49 +94,56 @@ def download_checksum(
     (version_suffix, file_name, checksum).
     """
     checksum_filename = "sha256sum.txt"
-    checksum_file_path = tmp_dir / checksum_filename
-    url_path = f"{VERSION_URL_PREFIX}/{checksum_filename}"
+    base_url = PREFERRED_BASE_URL or manager._download_base_url
+    if base_url is None:
+        manager._check_and_set_download_base_url()
+        base_url = manager._download_base_url
+    url_path = f"{base_url}/{VERSION_URL_PREFIX}/{checksum_filename}"
     # e.g. <device>: (<version>, <file_name>, <checksum>)
     files_checksum: Dict[str, Tuple[str, str, str]] = {}
     try:
-        manager._download_file(
-            url_path, checksum_file_path, base_url=PREFERRED_BASE_URL
-        )
-        with open(checksum_file_path, "r") as f:
-            for line in f:
-                pair = re.split(r"\s+", line.strip(), 1)
-                if len(pair) != 2:
+        response = requests.get(url_path)
+        if response.status_code != 200:
+            raise RuntimeError(
+                f"Failed to download checksum file from {url_path}. "
+                f"Status code: {response.status_code}"
+            )
+        for line in response.text.splitlines():
+            pair = split_checksum_line(line)
+            if pair is None:
+                continue
+            toolkit, version_suffix = split_filename(pair[1])
+            if toolkit in files_checksum:
+                if version_suffix == "":
                     continue
-                if not pair[1].startswith(TARGET_PREFIX):
+                version, _, _ = files_checksum[toolkit]
+                if parse(version_suffix) <= parse(version):
+                    # Skip if the version is not newer than the existing one
                     continue
-                toolkit, version_suffix = split_filename(pair[1])
-                if toolkit in files_checksum:
-                    if version_suffix == "":
-                        continue
-                    version, _, _ = files_checksum[toolkit]
-                    if parse(version_suffix) <= parse(version):
-                        # Skip if the version is not newer than the existing one
-                        continue
-                # e.g. dl-llama-box-linux-amd64-cuda-12.4.zip
-                files_checksum[toolkit] = (version_suffix, pair[1], pair[0])
+            # e.g. dl-llama-box-linux-amd64-cuda-12.4.zip
+            files_checksum[toolkit] = (version_suffix, pair[1], pair[0])
 
     except Exception as e:
         raise RuntimeError(f"Failed to download checksum file: {e}")
     return files_checksum
 
 
-def download_and_extract(manager: ToolsManager, file_path: Path, checksum: str) -> Path:
+def download_and_extract(
+    manager: ToolsManager, file_path: Path, extract_dir: Path, checksum: str
+) -> None:
     try:
-        manager._download_file(
-            f"{VERSION_URL_PREFIX}/{file_path.name}",
-            file_path,
-            base_url=PREFERRED_BASE_URL,
-        )
+        if not file_path.exists() or not verify_file_checksum(file_path, checksum):
+            file_path.unlink(missing_ok=True)  # Remove if exists
+            manager._download_file(
+                f"{VERSION_URL_PREFIX}/{file_path.name}",
+                file_path,
+                base_url=PREFERRED_BASE_URL,
+            )
+        else:
+            logger.info(f"Using cached file: {file_path.name}")
         if not verify_file_checksum(file_path, checksum):
             raise RuntimeError(f"Checksum verification failed for {file_path.name}")
-        manager._extract_file(file_path, file_path.parent)
-        os.remove(file_path)  # Remove the zip file after extraction
-        return file_path.parent
+        manager._extract_file(file_path, extract_dir)
     except Exception as e:
         raise RuntimeError(f"Failed to download or verify {file_path.name}: {e}")
 
@@ -137,34 +154,35 @@ def download_llama_box(manager: ToolsManager):
             "TOOLKIT_NAME environment variable is not set, skipping llama-box download."
         )
         return
-    target_dir = manager.third_party_bin_path / LLAMA_BOX
-    llama_box_tmp_dir = target_dir / f"tmp-{LLAMA_BOX}"
-    if os.path.exists(llama_box_tmp_dir):
-        shutil.rmtree(llama_box_tmp_dir)
-    os.makedirs(llama_box_tmp_dir, exist_ok=True)
-    files_checksum = download_checksum(manager, llama_box_tmp_dir)
-    if TOOLKIT_NAME not in files_checksum:
+    versioned_base = f"{LLAMA_BOX}-{LLAMA_BOX_VERSION}-{system()}-{arch()}"
+    cache_dir = Path("./build/cache").resolve()
+    os.makedirs(cache_dir, exist_ok=True)
+
+    files_checksum = download_checksum(manager)
+    if TOOLKIT_NAME != ALL_TOOLKIT_NAME and TOOLKIT_NAME not in files_checksum:
         raise ValueError(
             f"Required toolkit '{TOOLKIT_NAME}' not found in the checksum file."
         )
-    _, file_name, checksum = files_checksum[TOOLKIT_NAME]
-    basedir = f"{LLAMA_BOX}-{LLAMA_BOX_VERSION}-{system()}-{arch()}"
-    if TOOLKIT_NAME != "":
-        basedir += f"-{TOOLKIT_NAME}"
-    file_path = llama_box_tmp_dir / basedir / file_name
-    try:
-        os.makedirs(file_path.parent, exist_ok=True)
-        logger.info(f"Downloading {file_path.parent.name} '{LLAMA_BOX_VERSION}'")
-        versioned_dir = download_and_extract(manager, file_path, checksum)
-        shutil.move(versioned_dir, target_dir)
-        manager._update_versions_file(versioned_dir.name, LLAMA_BOX_VERSION)
+    for toolkit, (_, file_name, checksum) in files_checksum.items():
+        if TOOLKIT_NAME != ALL_TOOLKIT_NAME and toolkit != TOOLKIT_NAME:
+            continue
 
-    except Exception as e:
-        raise RuntimeError(f"Failed to download or verify {file_name}: {e}")
+        versioned_dir = versioned_base + (f"-{toolkit}" if toolkit != "" else "")
+        target_dir = manager.third_party_bin_path / LLAMA_BOX / versioned_dir
+        if target_dir.exists():
+            # only trust the downloaded file with verfied checksum
+            logger.info(f"Removing existing directory: {target_dir}")
+            shutil.rmtree(target_dir)
+        os.makedirs(target_dir, exist_ok=True)
 
-    # remove tmp dir
-    if os.path.exists(llama_box_tmp_dir):
-        shutil.rmtree(llama_box_tmp_dir)
+        file_path = cache_dir / file_name
+        try:
+            logger.info(f"Downloading {file_path.name} '{LLAMA_BOX_VERSION}'")
+            download_and_extract(manager, file_path, target_dir, checksum)
+            manager._update_versions_file(versioned_dir, LLAMA_BOX_VERSION)
+
+        except Exception as e:
+            raise RuntimeError(f"Failed to download or verify {file_name}: {e}")
 
 
 def download():
@@ -187,8 +205,6 @@ def download_dac(base_path: str) -> str:
         )
     local_path = Path(base_path) / filename
     if not local_path.exists():
-        import requests
-
         response = requests.get(download_link)
 
         if response.status_code != 200:

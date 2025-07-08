@@ -20,6 +20,15 @@ on:
         required: false
         type: boolean
         default: false
+      macos-toolkit-name:
+        description: 'The name of the toolkit to use for macOS builds'
+        type: string
+        required: false
+        default: "mps"
+      windows-toolkit-name:
+        description: 'The name of the toolkit to use for Windows builds'
+        type: string
+        required: false
     secrets:
       P12_BASE64:
         required: false
@@ -38,6 +47,8 @@ env:
   CODESIGN_IDENTITY: "${{ inputs.setup-certificate && 'Developer ID Application: Seal Software Co., Ltd. (33M7PPLX4U)' || '' }}"
 jobs:
   ci-macos:
+    env:
+      TOOLKIT_NAME: ${{ inputs.macos-toolkit-name }}
     runs-on: macos-latest
     steps:
       - name: Install the Apple certificate
@@ -103,6 +114,13 @@ jobs:
             /opt/homebrew/lib/fst
             /opt/homebrew/include/fst
           key: ${{ runner.os }}-openfstlib-${{ hashFiles('hack/build-openfst.sh') }}-${{ hashFiles('hack/patch/openfst.patch') }}
+      - name: Cache LlamaBox
+        id: cache-llama-box
+        uses: actions/cache@v3
+        with:
+          path: |
+            build/cache
+          key: ${{ runner.os }}-llama-box-${{ hashFiles('**/poetry.lock') }}-${{ inputs.macos-toolkit-name }}
       - name: Run CI build
         id: run_ci
         env:

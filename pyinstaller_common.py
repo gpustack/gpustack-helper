@@ -20,8 +20,8 @@ version = os.getenv('GIT_VERSION', '0.99.0.0').removeprefix('v')
 version_short = '.'.join(version.split('.')[0:3])
 app_name = 'GPUStack'
 
-os.makedirs('./build', exist_ok=True)
-dac_path = download_dac('./build')
+os.makedirs('./build/cache', exist_ok=True)
+dac_path = download_dac('./build/cache')
 
 datas = [
     (get_package_dir('gpustack.migrations'), './gpustack/migrations'),
