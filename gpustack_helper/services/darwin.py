@@ -73,10 +73,12 @@ def get_start_script(restart: bool = False) -> str:
     helper_user = user_helper_config()
     helper_user.update_with_lock()
     helper_active = active_helper_config()
+    active_helper_config().reload()
 
     gpustack_user = user_gpustack_config()
     gpustack_user.update_with_lock()
     gpustack_active = active_gpustack_config()
+    gpustack_active.reload()
 
     files_copy: List[Tuple[str, str]] = [
         (user.config_path, active.config_path)
