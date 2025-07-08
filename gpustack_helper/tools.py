@@ -102,7 +102,7 @@ def download_checksum(manager: ToolsManager) -> Dict[str, Tuple[str, str, str]]:
     # e.g. <device>: (<version>, <file_name>, <checksum>)
     files_checksum: Dict[str, Tuple[str, str, str]] = {}
     try:
-        response = requests.get(url_path)
+        response = requests.get(url_path, timeout=10)
         if response.status_code != 200:
             raise RuntimeError(
                 f"Failed to download checksum file from {url_path}. "
