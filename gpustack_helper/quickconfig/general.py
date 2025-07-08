@@ -10,6 +10,7 @@ from PySide6.QtWidgets import (
     QLayout,
 )
 from PySide6.QtCore import Qt, Slot, SignalInstance
+from PySide6.QtGui import QGuiApplication
 from typing import Tuple, List, Union
 from gpustack_helper.config import GPUStackConfig
 from gpustack_helper.quickconfig.common import (
@@ -81,6 +82,20 @@ class GeneralConfigPage(DataBindWidget):
     def on_save(self, cfg, config):
         if self.group.checkedId() != self._worker_index:
             self.server_url[1].setText("")
+        else:
+            if not self.server_url[1].text().strip():
+                raise ValueError(
+                    QGuiApplication.translate(
+                        "GPUStackConfig",
+                        "Server URL is required when running as Worker",
+                    )
+                )
+            if not self.token[1].text().strip():
+                raise ValueError(
+                    QGuiApplication.translate(
+                        "GPUStackConfig", "Token is required when running as Worker"
+                    )
+                )
 
     def __init__(
         self,

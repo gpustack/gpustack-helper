@@ -11,7 +11,7 @@ from PySide6.QtWidgets import (
     QListWidgetItem,
 )
 
-from PySide6.QtGui import QIcon
+from PySide6.QtGui import QIcon, QGuiApplication
 from PySide6.QtCore import Qt, Signal, Slot
 from gpustack_helper.config import (
     HelperConfig,
@@ -19,6 +19,7 @@ from gpustack_helper.config import (
     user_gpustack_config,
     user_helper_config,
 )
+from gpustack_helper.common import show_warning
 from gpustack_helper.quickconfig.common import wrap_layout, DataBindWidget
 from gpustack_helper.quickconfig.general import GeneralConfigPage
 from gpustack_helper.quickconfig.envvar import EnvironmentVariablePage
@@ -179,24 +180,36 @@ class QuickConfig(QDialog):
         config = user_gpustack_config()
         config.reload()
         super().showEvent(event)
-        self.signalOnShow.emit(cfg, config)
+        for _, page in self.pages:
+            page.on_show(cfg, config)
         self.raise_()
         self.activateWindow()
 
     def save_and_start(self):
-        self.save()
-        self.status.status = (
-            service.State.STARTING
-            if self.status.status & service.State.STOPPED
-            else service.State.RESTARTING
-        )
+        saved = self.save()
+        if not saved:
+            return
+        if bool(self.status.status & service.State.STOPPED):
+            self.status.start_action(skip_config_check=True)
+        else:
+            self.status.restart_action()
 
-    def save(self):
+    def save(self) -> bool:
         # 处理ButtonGroup的状态，当选择不是 Server + Worker 时清空输入
         cfg = user_helper_config()
         config = user_gpustack_config()
-        self.signalOnSave.emit(cfg, config)
-
+        try:
+            for _, page in self.pages:
+                page.on_save(cfg, config)
+        except Exception as e:
+            show_warning(
+                self,
+                QGuiApplication.translate("QuickConfig", "Validation failed"),
+                QGuiApplication.translate("QuickConfig", "{error}").format(
+                    error=str(e)
+                ),
+            )
+            return False
         helper_data: Dict[str, any] = {}
         config_data: Dict[str, any] = {}
         for _, page in self.pages:
@@ -204,6 +217,18 @@ class QuickConfig(QDialog):
                 binder.update_config(helper_data)
             for binder in page.config_binders:
                 binder.update_config(config_data)
+
+        try:
+            config.validate_updates(**config_data)
+        except Exception as e:
+            show_warning(
+                self,
+                QGuiApplication.translate("GPUStackConfig", "Configuration Error"),
+                QGuiApplication.translate("GPUStackConfig", "{error}").format(
+                    error=str(e)
+                ),
+            )
+            return False
 
         cfg.update_with_lock(**helper_data)
         config.update_with_lock(**config_data)

@@ -1,9 +1,11 @@
 import os
 import logging
 import sys
+import socket
 from pydantic import BaseModel, Field, PrivateAttr
 from typing import List, Dict, Optional, Callable, TypeVar, Tuple
 from PySide6.QtWidgets import QWidget
+from PySide6.QtGui import QGuiApplication
 from gpustack.config import Config
 from gpustack_helper.defaults import (
     log_file_path,
@@ -214,6 +216,14 @@ class GPUStackConfig(Config):
     ) -> DataBinder:
         return DataBinder(key, cls, widget, ignore_zero_value=ignore_zero_value)
 
+    def validate_updates(self, **kwargs):
+        """
+        Validate the updates to the configuration.
+        This method can be overridden by subclasses to implement specific validation logic.
+        """
+        to_test = self.model_copy(update=kwargs)
+        test_port_available(to_test)
+
 
 def legacy_helper_config() -> Optional[HelperConfig]:
     if not os.path.exists(runtime_plist_path):
@@ -226,6 +236,25 @@ def legacy_helper_config() -> Optional[HelperConfig]:
             x, filepath=runtime_plist_path, encoder=PlistEncoder
         ),
     )
+
+
+def test_port_available(config: GPUStackConfig) -> None:
+    port, _ = config.get_port()
+    host = config.host or '127.0.0.1'
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        try:
+            s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            s.bind((host, port))
+        except OSError as e:
+            logger.debug(f"Port {host}:{port} unavailable: {e}")
+            raise RuntimeError(
+                QGuiApplication.translate(
+                    "GPUStackConfig",
+                    "Port {host}:{port} is already in use.".format(
+                        host=host, port=port
+                    ),
+                )
+            )
 
 
 if __name__ == "__main__":
