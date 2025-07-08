@@ -46,26 +46,51 @@
     </message>
 </context>
 <context>
+    <name>GPUStackConfig</name>
+    <message>
+        <location filename="../gpustack_helper/status.py" line="197"/>
+        <location filename="../gpustack_helper/quickconfig/dialog.py" line="226"/>
+        <source>Configuration Error</source>
+        <translation>Configuration Error</translation>
+    </message>
+    <message>
+        <location filename="../gpustack_helper/status.py" line="198"/>
+        <location filename="../gpustack_helper/quickconfig/dialog.py" line="227"/>
+        <source>{error}</source>
+        <translation>{error}</translation>
+    </message>
+    <message>
+        <location filename="../gpustack_helper/quickconfig/general.py" line="92"/>
+        <source>Server URL is required when running as Worker</source>
+        <translation>Server URL is required when running as Worker</translation>
+    </message>
+    <message>
+        <location filename="../gpustack_helper/quickconfig/general.py" line="98"/>
+        <source>Token is required when running as Worker</source>
+        <translation>Token is required when running as Worker</translation>
+    </message>
+</context>
+<context>
     <name>GeneralConfigPage</name>
     <message>
-        <location filename="../gpustack_helper/quickconfig/general.py" line="45"/>
-        <location filename="../gpustack_helper/quickconfig/general.py" line="48"/>
+        <location filename="../gpustack_helper/quickconfig/general.py" line="46"/>
+        <location filename="../gpustack_helper/quickconfig/general.py" line="49"/>
         <source>Required</source>
         <translation>Required</translation>
     </message>
     <message>
         <location filename="../gpustack_helper/quickconfig/common.py" line="56"/>
-        <location filename="../gpustack_helper/quickconfig/general.py" line="46"/>
+        <location filename="../gpustack_helper/quickconfig/general.py" line="47"/>
         <source>Optional</source>
         <translation>Optional</translation>
     </message>
     <message>
-        <location filename="../gpustack_helper/quickconfig/general.py" line="63"/>
+        <location filename="../gpustack_helper/quickconfig/general.py" line="64"/>
         <source>Server Role</source>
         <translation>Server Role</translation>
     </message>
     <message>
-        <location filename="../gpustack_helper/quickconfig/general.py" line="74"/>
+        <location filename="../gpustack_helper/quickconfig/general.py" line="75"/>
         <source>Port Config</source>
         <translation>Port Config</translation>
     </message>
@@ -116,58 +141,68 @@
 <context>
     <name>QuickConfig</name>
     <message>
-        <location filename="../gpustack_helper/quickconfig/dialog.py" line="115"/>
+        <location filename="../gpustack_helper/quickconfig/dialog.py" line="116"/>
         <source>Quick Config</source>
         <translation>Quick Config</translation>
     </message>
     <message>
-        <location filename="../gpustack_helper/quickconfig/dialog.py" line="122"/>
+        <location filename="../gpustack_helper/quickconfig/dialog.py" line="123"/>
         <source>General</source>
         <translation>General</translation>
     </message>
     <message>
-        <location filename="../gpustack_helper/quickconfig/dialog.py" line="126"/>
+        <location filename="../gpustack_helper/quickconfig/dialog.py" line="127"/>
         <source>Environments</source>
         <translation>Environments</translation>
     </message>
     <message>
-        <location filename="../gpustack_helper/quickconfig/dialog.py" line="155"/>
-        <location filename="../gpustack_helper/quickconfig/dialog.py" line="166"/>
-        <location filename="../gpustack_helper/quickconfig/dialog.py" line="169"/>
+        <location filename="../gpustack_helper/quickconfig/dialog.py" line="156"/>
+        <location filename="../gpustack_helper/quickconfig/dialog.py" line="167"/>
+        <location filename="../gpustack_helper/quickconfig/dialog.py" line="170"/>
         <source>Start</source>
         <translation>Start</translation>
     </message>
     <message>
-        <location filename="../gpustack_helper/quickconfig/dialog.py" line="158"/>
+        <location filename="../gpustack_helper/quickconfig/dialog.py" line="159"/>
         <source>Cancel</source>
         <translation>Cancel</translation>
     </message>
     <message>
-        <location filename="../gpustack_helper/quickconfig/dialog.py" line="163"/>
+        <location filename="../gpustack_helper/quickconfig/dialog.py" line="164"/>
         <source>Restart</source>
         <translation>Restart</translation>
+    </message>
+    <message>
+        <location filename="../gpustack_helper/quickconfig/dialog.py" line="207"/>
+        <source>Validation failed</source>
+        <translation>Validation failed</translation>
+    </message>
+    <message>
+        <location filename="../gpustack_helper/quickconfig/dialog.py" line="208"/>
+        <source>{error}</source>
+        <translation>{error}</translation>
     </message>
 </context>
 <context>
     <name>Status</name>
     <message>
-        <location filename="../gpustack_helper/status.py" line="53"/>
-        <location filename="../gpustack_helper/status.py" line="157"/>
+        <location filename="../gpustack_helper/status.py" line="52"/>
+        <location filename="../gpustack_helper/status.py" line="156"/>
         <source>Status ({status})</source>
         <translation>Status ({status})</translation>
     </message>
     <message>
-        <location filename="../gpustack_helper/status.py" line="50"/>
+        <location filename="../gpustack_helper/status.py" line="49"/>
         <source>Start</source>
         <translation>Start</translation>
     </message>
     <message>
-        <location filename="../gpustack_helper/status.py" line="52"/>
+        <location filename="../gpustack_helper/status.py" line="51"/>
         <source>Restart</source>
         <translation>Restart</translation>
     </message>
     <message>
-        <location filename="../gpustack_helper/status.py" line="51"/>
+        <location filename="../gpustack_helper/status.py" line="50"/>
         <source>Stop</source>
         <translation>Stop</translation>
     </message>

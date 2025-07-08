@@ -141,6 +141,8 @@ def active_helper_config() -> HelperConfig:
 
 def user_gpustack_config() -> GPUStackConfig:
     global _user_gpustack_config
+    if not os.path.exists(_user_gpustack_config.config_path):
+        _user_gpustack_config.update_with_lock()
     return _user_gpustack_config
 
 

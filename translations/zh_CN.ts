@@ -46,26 +46,51 @@
     </message>
 </context>
 <context>
+    <name>GPUStackConfig</name>
+    <message>
+        <location filename="../gpustack_helper/status.py" line="197"/>
+        <location filename="../gpustack_helper/quickconfig/dialog.py" line="226"/>
+        <source>Configuration Error</source>
+        <translation>配置异常</translation>
+    </message>
+    <message>
+        <location filename="../gpustack_helper/status.py" line="198"/>
+        <location filename="../gpustack_helper/quickconfig/dialog.py" line="227"/>
+        <source>{error}</source>
+        <translation>{error}</translation>
+    </message>
+    <message>
+        <location filename="../gpustack_helper/quickconfig/general.py" line="92"/>
+        <source>Server URL is required when running as Worker</source>
+        <translation>缺少Server URL配置</translation>
+    </message>
+    <message>
+        <location filename="../gpustack_helper/quickconfig/general.py" line="98"/>
+        <source>Token is required when running as Worker</source>
+        <translation>缺少Token配置</translation>
+    </message>
+</context>
+<context>
     <name>GeneralConfigPage</name>
     <message>
-        <location filename="../gpustack_helper/quickconfig/general.py" line="45"/>
-        <location filename="../gpustack_helper/quickconfig/general.py" line="48"/>
+        <location filename="../gpustack_helper/quickconfig/general.py" line="46"/>
+        <location filename="../gpustack_helper/quickconfig/general.py" line="49"/>
         <source>Required</source>
         <translation>必填</translation>
     </message>
     <message>
         <location filename="../gpustack_helper/quickconfig/common.py" line="56"/>
-        <location filename="../gpustack_helper/quickconfig/general.py" line="46"/>
+        <location filename="../gpustack_helper/quickconfig/general.py" line="47"/>
         <source>Optional</source>
         <translation>可选</translation>
     </message>
     <message>
-        <location filename="../gpustack_helper/quickconfig/general.py" line="63"/>
+        <location filename="../gpustack_helper/quickconfig/general.py" line="64"/>
         <source>Server Role</source>
         <translation>服务角色</translation>
     </message>
     <message>
-        <location filename="../gpustack_helper/quickconfig/general.py" line="74"/>
+        <location filename="../gpustack_helper/quickconfig/general.py" line="75"/>
         <source>Port Config</source>
         <translation>端口配置</translation>
     </message>
@@ -116,58 +141,68 @@
 <context>
     <name>QuickConfig</name>
     <message>
-        <location filename="../gpustack_helper/quickconfig/dialog.py" line="115"/>
+        <location filename="../gpustack_helper/quickconfig/dialog.py" line="116"/>
         <source>Quick Config</source>
         <translation>快速配置</translation>
     </message>
     <message>
-        <location filename="../gpustack_helper/quickconfig/dialog.py" line="122"/>
+        <location filename="../gpustack_helper/quickconfig/dialog.py" line="123"/>
         <source>General</source>
         <translation>通用</translation>
     </message>
     <message>
-        <location filename="../gpustack_helper/quickconfig/dialog.py" line="126"/>
+        <location filename="../gpustack_helper/quickconfig/dialog.py" line="127"/>
         <source>Environments</source>
         <translation>环境变量</translation>
     </message>
     <message>
-        <location filename="../gpustack_helper/quickconfig/dialog.py" line="155"/>
-        <location filename="../gpustack_helper/quickconfig/dialog.py" line="166"/>
-        <location filename="../gpustack_helper/quickconfig/dialog.py" line="169"/>
+        <location filename="../gpustack_helper/quickconfig/dialog.py" line="156"/>
+        <location filename="../gpustack_helper/quickconfig/dialog.py" line="167"/>
+        <location filename="../gpustack_helper/quickconfig/dialog.py" line="170"/>
         <source>Start</source>
         <translation>启动</translation>
     </message>
     <message>
-        <location filename="../gpustack_helper/quickconfig/dialog.py" line="158"/>
+        <location filename="../gpustack_helper/quickconfig/dialog.py" line="159"/>
         <source>Cancel</source>
         <translation>取消</translation>
     </message>
     <message>
-        <location filename="../gpustack_helper/quickconfig/dialog.py" line="163"/>
+        <location filename="../gpustack_helper/quickconfig/dialog.py" line="164"/>
         <source>Restart</source>
         <translation>重启</translation>
+    </message>
+    <message>
+        <location filename="../gpustack_helper/quickconfig/dialog.py" line="207"/>
+        <source>Validation failed</source>
+        <translation>配置校验异常</translation>
+    </message>
+    <message>
+        <location filename="../gpustack_helper/quickconfig/dialog.py" line="208"/>
+        <source>{error}</source>
+        <translation>{error}</translation>
     </message>
 </context>
 <context>
     <name>Status</name>
     <message>
-        <location filename="../gpustack_helper/status.py" line="53"/>
-        <location filename="../gpustack_helper/status.py" line="157"/>
+        <location filename="../gpustack_helper/status.py" line="52"/>
+        <location filename="../gpustack_helper/status.py" line="156"/>
         <source>Status ({status})</source>
         <translation>状态（{status}）</translation>
     </message>
     <message>
-        <location filename="../gpustack_helper/status.py" line="50"/>
+        <location filename="../gpustack_helper/status.py" line="49"/>
         <source>Start</source>
         <translation>启动</translation>
     </message>
     <message>
-        <location filename="../gpustack_helper/status.py" line="52"/>
+        <location filename="../gpustack_helper/status.py" line="51"/>
         <source>Restart</source>
         <translation>重新启动</translation>
     </message>
     <message>
-        <location filename="../gpustack_helper/status.py" line="51"/>
+        <location filename="../gpustack_helper/status.py" line="50"/>
         <source>Stop</source>
         <translation>停止</translation>
     </message>

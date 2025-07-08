@@ -1,7 +1,6 @@
 import logging
 from PySide6.QtWidgets import QMenu
-import socket
-from PySide6.QtGui import QAction, QActionGroup
+from PySide6.QtGui import QAction, QActionGroup, QGuiApplication
 from PySide6.QtCore import Slot, Signal, QProcess, QThread, QCoreApplication
 from typing import Optional, Tuple, Union, Dict
 from gpustack_helper.config import (
@@ -162,29 +161,46 @@ class Status(QMenu):
     @Slot()
     def start_or_stop_action(self):
         self.start_or_stop.setDisabled(True)
-        ok = True
-        if not bool(self.status & service.State.TO_MIGRATE) and bool(
-            self.status & service.State.STOPPED
-        ):
-            host, port, ok = self.is_port_available()
-            if not ok:
-                show_warning(
-                    self,
-                    "Port Unavailable",
-                    f"Cannot start service because port {host}:{port} is already in use. Please check if another service is running.",
-                )
-        if ok:
-            self.status = (
-                service.State.STARTING
-                if self.status & service.State.STOPPED
-                else service.State.STOPPING
+        if bool(self.status & service.State.STOPPED):
+            self.start_action(
+                skip_config_check=bool(self.status & service.State.TO_MIGRATE)
             )
+        else:
+            self.stop_action()
         self.start_or_stop.setEnabled(True)
 
     @Slot()
     def restart_action(self):
         self.restart.setDisabled(True)
+        if bool(self.status & service.State.TO_SYNC):
+            try:
+                user_gpustack_config().validate_updates()
+            except Exception as e:
+                show_warning(
+                    self,
+                    "Configuration Error",
+                    f"Failed to validate configuration: {e}",
+                )
+                return
         self.status = service.State.RESTARTING
+
+    def stop_action(self):
+        self.status = service.State.STOPPING
+
+    def start_action(self, skip_config_check: bool = False):
+        if not skip_config_check:
+            try:
+                user_gpustack_config().validate_updates()
+            except Exception as e:
+                show_warning(
+                    self,
+                    QGuiApplication.translate("GPUStackConfig", "Configuration Error"),
+                    QGuiApplication.translate("GPUStackConfig", "{error}").format(
+                        error=str(e)
+                    ),
+                )
+                return
+        self.status = service.State.STARTING
 
     @Slot()
     def update_menu_status(self):
@@ -213,16 +229,3 @@ class Status(QMenu):
                 self.qprocess.waitForFinished()
             elif isinstance(self.qprocess, QThread):
                 self.qprocess.wait()
-
-    def is_port_available(self) -> Tuple[str, int, bool]:
-        config = user_gpustack_config()
-        port, _ = config.get_port()
-        host = config.host or '127.0.0.1'
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            try:
-                s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-                s.bind((host, port))
-                return host, port, True
-            except OSError as e:
-                logger.debug(f"Port {host}:{port} unavailable: {e}")
-                return host, port, False
