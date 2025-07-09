@@ -44,12 +44,13 @@ def get_toolkit_name(device: str) -> str:
         "hip": DeviceTypeEnum.ROCM.value,
         "musa": DeviceTypeEnum.MUSA.value,
         "dtk": DeviceTypeEnum.DCU.value,
+        "cpu": "",
     }
 
     if device in device_toolkit_mapper:
         return device_toolkit_mapper[device]
     else:
-        return ""
+        return device
 
 
 def split_filename(file_name: str) -> Tuple[str, str]:
