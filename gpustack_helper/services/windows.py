@@ -87,10 +87,9 @@ def _sync_configs() -> None:
         config_data["ProgramArguments"] = helper_active.default_program_arguments
         config_data["data_dir"] = active_helper_config().data_dir
         config_data["nssm_path"] = str(nssm_binary_path)
-        helper_active.update_with_lock(**config_data)
-    if helper_active.ProgramArguments != helper_active.default_program_arguments:
+    elif helper_active.ProgramArguments != helper_active.default_program_arguments:
         config_data["ProgramArguments"] = helper_active.default_program_arguments
-        helper_active.update_with_lock(**config_data)
+    helper_active.update_with_lock(**config_data)
 
 
 def _ensure_log_dir() -> None:

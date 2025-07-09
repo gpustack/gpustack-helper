@@ -284,7 +284,7 @@ def set_in_registry(config: Dict[str, Any], exclude_defaults: bool = False) -> N
                         winreg.SetValueEx(key, name, 0, reg_type, v)
                 except FileNotFoundError:
                     logger.warning(
-                        f"Registry key {path} not found, skipping setting {name} with value {v}"
+                        f"Registry value '{name}' not found in key '{path}', skipping delete."
                     )
                     continue
                 except Exception as e:
