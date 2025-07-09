@@ -104,10 +104,10 @@ def get_start_script(restart: bool = False) -> str:
     # migrate the legacy data dir
     old_gpustack_config = legacy_gpustack_config()
     migrate = (
-        f"mkdir -p '{gpustack_active.data_dir}';"
+        f"mkdir -p '{gpustack_active.static_data_dir}';"
         f"for f in {bash_escape_spaces(old_gpustack_config.data_dir)}/*;"
         "do case \\\"$f\\\" in *.sh) continue ;; esac;"
-        f"mv -f \\\"$f\\\" '{gpustack_active.data_dir}';done"
+        f"mv -f \\\"$f\\\" '{gpustack_active.static_data_dir}';done"
         if old_gpustack_config
         else None
     )
@@ -116,7 +116,7 @@ def get_start_script(restart: bool = False) -> str:
         for src, dst in files_copy
     )
     copy_files = (
-        f"mkdir -p '{gpustack_active.data_dir}'; {copy_files}"
+        f"mkdir -p '{gpustack_active.static_data_dir}'; {copy_files}"
         if len(files_copy) != 0
         else None
     )
@@ -126,9 +126,9 @@ def get_start_script(restart: bool = False) -> str:
         else None
     )
     # link target should be resources path of gpustack_helper and name would be dac filename
-    # link source should be the dac filename in the gpustack_active.data_dir/root dir
+    # link source should be the dac filename in the gpustack_active.static_data_dir/root dir
     target_home = os.path.join(
-        gpustack_active.data_dir, "root", '.cache', 'descript', 'dac'
+        gpustack_active.static_data_dir, "root", '.cache', 'descript', 'dac'
     )
     dac_filename = get_dac_filename()
     source_filename = os.path.join(resource_path, dac_filename)

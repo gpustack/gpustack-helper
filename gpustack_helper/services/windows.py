@@ -47,16 +47,16 @@ def _relocate_legacy_files() -> None:
     gpustack_legacy = legacy_gpustack_config()
     if gpustack_legacy:
         # migrate legacy data files
-        if gpustack_legacy.data_dir != gpustack_active.data_dir:
+        if gpustack_legacy.data_dir != gpustack_active.static_data_dir:
             logger.info(
-                f"Migrating legacy data files from {gpustack_legacy.data_dir} to {gpustack_active.data_dir}"
+                f"Migrating legacy data files from {gpustack_legacy.data_dir} to {gpustack_active.static_data_dir}"
             )
             try:
                 for file in glob.glob(gpustack_legacy.data_dir + "/*"):
                     if file.endswith(".ps1"):
                         continue
                     target_file = os.path.join(
-                        gpustack_active.data_dir, os.path.basename(file)
+                        gpustack_active.static_data_dir, os.path.basename(file)
                     )
                     if os.path.exists(target_file):
                         logger.warning(
@@ -66,7 +66,7 @@ def _relocate_legacy_files() -> None:
                             os.remove(target_file)
                         elif os.path.isdir(target_file):
                             shutil.rmtree(target_file)
-                    shutil.move(file, gpustack_active.data_dir)
+                    shutil.move(file, gpustack_active.static_data_dir)
             except Exception as e:
                 logger.error(f"Failed to migrate data files: {e}")
 
