@@ -121,8 +121,10 @@ class DataBinder(QObject):
                 combo = QComboBox()
                 combo.setEditable(True)
                 combo.addItem(k)
+                combo.setToolTip(k)
                 widget.setCellWidget(row_position, 0, combo)
                 item = QTableWidgetItem(v)
+                item.setToolTip(v)
                 item.setFlags(item.flags() | Qt.ItemFlag.ItemIsEditable)
                 widget.setItem(row_position, 1, item)
 
