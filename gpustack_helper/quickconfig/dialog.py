@@ -186,15 +186,16 @@ class QuickConfig(QDialog):
         self.activateWindow()
 
     def save_and_start(self):
-        saved = self.save()
+        is_start = (self.status.status & service.State.STOPPED) == service.State.STOPPED
+        saved = self.save(is_start)
         if not saved:
             return
-        if bool(self.status.status & service.State.STOPPED):
+        if is_start:
             self.status.start_action(skip_config_check=True)
         else:
             self.status.restart_action()
 
-    def save(self) -> bool:
+    def save(self, is_start: bool) -> bool:
         # 处理ButtonGroup的状态，当选择不是 Server + Worker 时清空输入
         cfg = user_helper_config()
         config = user_gpustack_config()
@@ -217,20 +218,21 @@ class QuickConfig(QDialog):
                 binder.update_config(helper_data)
             for binder in page.config_binders:
                 binder.update_config(config_data)
-
-        try:
-            config.validate_updates(**config_data)
-        except Exception as e:
-            show_warning(
-                self,
-                QGuiApplication.translate("GPUStackConfig", "Configuration Error"),
-                QGuiApplication.translate("GPUStackConfig", "{error}").format(
-                    error=str(e)
-                ),
-            )
-            return False
+        if is_start:
+            try:
+                config.validate_updates(**config_data)
+            except Exception as e:
+                show_warning(
+                    self,
+                    QGuiApplication.translate("GPUStackConfig", "Configuration Error"),
+                    QGuiApplication.translate("GPUStackConfig", "{error}").format(
+                        error=str(e)
+                    ),
+                )
+                return False
 
         cfg.update_with_lock(**helper_data)
         config.update_with_lock(**config_data)
 
         super().accept()
+        return True

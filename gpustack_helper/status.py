@@ -172,16 +172,6 @@ class Status(QMenu):
     @Slot()
     def restart_action(self):
         self.restart.setDisabled(True)
-        if bool(self.status & service.State.TO_SYNC):
-            try:
-                user_gpustack_config().validate_updates()
-            except Exception as e:
-                show_warning(
-                    self,
-                    "Configuration Error",
-                    f"Failed to validate configuration: {e}",
-                )
-                return
         self.status = service.State.RESTARTING
 
     def stop_action(self):

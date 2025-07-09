@@ -225,12 +225,12 @@ def get_nested_field_value(
 def reset_model_to_default(model: BaseModel):
     # Pydantic v2
     for name, field in model.__class__.model_fields.items():
-        if field.default is not None:
-            value = field.default
-        elif field.default_factory is not None:
+        if field.default_factory is not None:
             value = field.default_factory()
+        elif hasattr(field, 'default'):
+            value = field.default  # 允许 default 为 None
         else:
-            continue
+            continue  # 没有 default 也没有 default_factory
         setattr(model, name, value)
 
 
