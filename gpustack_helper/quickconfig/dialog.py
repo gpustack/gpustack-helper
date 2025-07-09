@@ -187,7 +187,10 @@ class QuickConfig(QDialog):
 
     def save_and_start(self):
         is_start = (self.status.status & service.State.STOPPED) == service.State.STOPPED
-        saved = self.save(is_start)
+        to_migrate = (
+            self.status.status & service.State.TO_MIGRATE
+        ) == service.State.TO_MIGRATE
+        saved = self.save(not to_migrate and is_start)
         if not saved:
             return
         if is_start:
@@ -195,7 +198,7 @@ class QuickConfig(QDialog):
         else:
             self.status.restart_action()
 
-    def save(self, is_start: bool) -> bool:
+    def save(self, validate_config: bool) -> bool:
         # 处理ButtonGroup的状态，当选择不是 Server + Worker 时清空输入
         cfg = user_helper_config()
         config = user_gpustack_config()
@@ -218,7 +221,7 @@ class QuickConfig(QDialog):
                 binder.update_config(helper_data)
             for binder in page.config_binders:
                 binder.update_config(config_data)
-        if is_start:
+        if validate_config:
             try:
                 config.validate_updates(**config_data)
             except Exception as e:

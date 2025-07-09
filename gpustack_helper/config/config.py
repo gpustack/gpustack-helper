@@ -139,9 +139,13 @@ class HelperConfig(BaseModel):
 class GPUStackConfig(Config):
     _backend: Optional[ModelBackend] = PrivateAttr(default=None)
     _confg_path: str = PrivateAttr(default=None)
-    data_dir: str = Field(
-        default=default_data_dir, exclude=True, description="数据目录"
-    )
+    _data_dir: str = PrivateAttr(default=None)
+    # override the data_dir configured in Config
+    data_dir: Optional[str] = Field(default=None, exclude=True, description="数据目录")
+
+    @property
+    def static_data_dir(self) -> str:
+        return self._data_dir
 
     @property
     def config_path(self) -> str:
@@ -172,7 +176,7 @@ class GPUStackConfig(Config):
     def __init__(
         self,
         gpustack_config_path: str,
-        data_dir: Optional[str] = None,
+        static_data_dir: str,
         backend: Callable[[BaseModel], ModelBackend_Type] = None,
         **kwargs,
     ):
@@ -180,14 +184,14 @@ class GPUStackConfig(Config):
         self._confg_path = gpustack_config_path
         if backend is not None:
             self._backend = backend(self)
-        if data_dir is not None:
-            self.data_dir = data_dir
+        self._data_dir = static_data_dir or default_data_dir
+
         if len(kwargs) == 0:
             self.reload()
 
     @property
     def token_path(self) -> str:
-        return os.path.join(self.data_dir, "token")
+        return os.path.join(self._data_dir, "token")
 
     def token_exists(self) -> bool:
         return self.token is not None or os.path.exists(self.token_path)

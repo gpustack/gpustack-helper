@@ -77,7 +77,7 @@ def init_config(args: argparse.Namespace) -> None:
             filepath=user_gpustack_path,
         ),
         gpustack_config_path=user_gpustack_path,
-        data_dir=user_data_dir,
+        static_data_dir=user_data_dir,
     )
 
     _active_gpustack_config = GPUStackConfig(
@@ -86,7 +86,7 @@ def init_config(args: argparse.Namespace) -> None:
             filepath=active_gpustack_path,
         ),
         gpustack_config_path=active_gpustack_path,
-        data_dir=active_data_dir,
+        static_data_dir=active_data_dir,
     )
 
     active_helper_path = (
@@ -152,8 +152,8 @@ def active_gpustack_config() -> GPUStackConfig:
 
 
 def ensure_data_dir() -> None:
-    user_data_dir = _user_gpustack_config.data_dir
-    active_data_dir = _active_gpustack_config.data_dir
+    user_data_dir = _user_gpustack_config.static_data_dir
+    active_data_dir = _active_gpustack_config.static_data_dir
     if not os.path.exists(user_data_dir):
         try:
             os.makedirs(user_data_dir, exist_ok=True)
@@ -227,7 +227,9 @@ def legacy_gpustack_config() -> Optional[GPUStackConfig]:
     set_common_options(args, config_data)
     set_server_options(args, config_data)
     set_worker_options(args, config_data)
-    return GPUStackConfig(backend=None, gpustack_config_path="", **config_data)
+    return GPUStackConfig(
+        backend=None, gpustack_config_path="", static_data_dir="", **config_data
+    )
 
 
 def is_first_boot() -> bool:

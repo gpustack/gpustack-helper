@@ -49,13 +49,13 @@
     <name>GPUStackConfig</name>
     <message>
         <location filename="../gpustack_helper/status.py" line="187"/>
-        <location filename="../gpustack_helper/quickconfig/dialog.py" line="227"/>
+        <location filename="../gpustack_helper/quickconfig/dialog.py" line="230"/>
         <source>Configuration Error</source>
         <translation>Configuration Error</translation>
     </message>
     <message>
         <location filename="../gpustack_helper/status.py" line="188"/>
-        <location filename="../gpustack_helper/quickconfig/dialog.py" line="228"/>
+        <location filename="../gpustack_helper/quickconfig/dialog.py" line="231"/>
         <source>{error}</source>
         <translation>{error}</translation>
     </message>
@@ -173,12 +173,12 @@
         <translation>Restart</translation>
     </message>
     <message>
-        <location filename="../gpustack_helper/quickconfig/dialog.py" line="208"/>
+        <location filename="../gpustack_helper/quickconfig/dialog.py" line="211"/>
         <source>Validation failed</source>
         <translation>Validation failed</translation>
     </message>
     <message>
-        <location filename="../gpustack_helper/quickconfig/dialog.py" line="209"/>
+        <location filename="../gpustack_helper/quickconfig/dialog.py" line="212"/>
         <source>{error}</source>
         <translation>{error}</translation>
     </message>
