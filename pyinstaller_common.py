@@ -29,24 +29,24 @@ datas = [
     (get_package_dir('gpustack.ui'), './gpustack/ui'),
     (get_package_dir('gpustack.assets'), './gpustack/assets'),
     (
-        get_package_dir('gpustack.third_party.bin.fastfetch'),
+        os.path.join(get_package_dir('gpustack'), 'third_party/bin/fastfetch'),
         './gpustack/third_party/bin/fastfetch',
     ),
     (
-        get_package_dir('gpustack.third_party.bin.gguf-parser'),
+        os.path.join(get_package_dir('gpustack'), 'third_party/bin/gguf-parser'),
         './gpustack/third_party/bin/gguf-parser',
     ),
     (
         os.path.join(
-            get_package_dir('gpustack.third_party.bin.llama-box'),
-            f"llama-box-{BUILTIN_LLAMA_BOX_VERSION}-*",
+            get_package_dir('gpustack'),
+            f'third_party/bin/llama-box/llama-box-{BUILTIN_LLAMA_BOX_VERSION}-*',
         ),
         './gpustack/third_party/bin/llama-box',
     ),
     (
         os.path.join(
-            get_package_dir('gpustack.third_party.bin'),
-            "versions.json",
+            get_package_dir('gpustack'),
+            'third_party/bin/versions.json',
         ),
         './gpustack/third_party/bin',
     ),
