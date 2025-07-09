@@ -1,6 +1,7 @@
 # -*- mode: python ; coding: utf-8 -*-
 from PyInstaller.utils.hooks import collect_all, collect_data_files
 from gpustack_helper.tools import download, get_package_dir, download_dac
+from gpustack.worker.tools_manager import BUILTIN_LLAMA_BOX_VERSION
 import os
 import sys
 
@@ -27,7 +28,21 @@ datas = [
     (get_package_dir('gpustack.migrations'), './gpustack/migrations'),
     (get_package_dir('gpustack.ui'), './gpustack/ui'),
     (get_package_dir('gpustack.assets'), './gpustack/assets'),
-    (get_package_dir('gpustack.third_party'), './gpustack/third_party'),
+    (
+        get_package_dir('gpustack.third_party/bin/fastfetch'),
+        './gpustack/third_party/bin/fastfetch',
+    ),
+    (
+        get_package_dir('gpustack.third_party/bin/gguf-parser'),
+        './gpustack/third_party/bin/gguf-parser',
+    ),
+    (
+        os.path.join(
+            get_package_dir('gpustack.third_party/bin/llama-box'),
+            f"llama-box-{BUILTIN_LLAMA_BOX_VERSION}-*",
+        ),
+        './gpustack/third_party/bin/llama-box',
+    ),
     (
         os.path.join(get_package_dir('gpustack.detectors.fastfetch'), '*.jsonc'),
         './gpustack/detectors/fastfetch/',
