@@ -189,6 +189,11 @@ def download_llama_box(manager: ToolsManager):
 def download():
     manager = ToolsManager()
     try:
+        version_path = os.path.join(
+            get_package_dir("gpustack.third_party.bin"), "versions.json"
+        )
+        if os.path.exists(version_path):
+            os.remove(version_path)
         manager.download_fastfetch()
         manager.download_gguf_parser()
         download_llama_box(manager)
