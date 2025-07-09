@@ -38,11 +38,16 @@ class EnvironmentVariablePage(DataBindWidget):
             ["HF_TOKEN", "HF_ENDPOINT", "HTTP_PROXY", "HTTPS_PROXY", "NO_PROXY"]
         )  # Customize as needed
         self.envvar.setCellWidget(row_position, 0, combo)
+        combo.currentTextChanged.connect(
+            lambda text: combo.setToolTip(text)  # Update tooltip on change
+        )
+        combo.setToolTip("HF_TOKEN")
 
         # Second column is an editable text
         item = QTableWidgetItem()
         item.setFlags(item.flags() | Qt.ItemFlag.ItemIsEditable)
         self.envvar.setItem(row_position, 1, item)
+        item.setToolTip("")  # 初始tooltip为空
 
     def remove_row(self):
         current_row = self.envvar.currentRow()
@@ -102,6 +107,12 @@ class EnvironmentVariablePage(DataBindWidget):
         self.envvar.selectionModel().selectionChanged.connect(
             self.on_table_selection_changed_selection
         )
+        self.envvar.itemChanged.connect(self.on_item_changed)  # 新增：同步tooltip
+
+    def on_item_changed(self, item):
+        # 只同步 Value 列（第2列）的tooltip
+        if item.column() == 1:
+            item.setToolTip(item.text())
 
     def on_show(self, cfg, config):
         super().on_show(cfg, config)
