@@ -10,7 +10,7 @@ from gpustack_helper.config.config import (
     HelperConfig,
 )
 
-service_name = "gpustack"
+service_name = "GPUStack"
 logger = logging.getLogger(__name__)
 registry_path = r"SYSTEM\CurrentControlSet\Services\GPUStack"
 

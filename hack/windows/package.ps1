@@ -18,11 +18,11 @@ function Build-Installer {
     $outputMsi = "dist/GPUStackInstaller-$productVersion.msi"
 
     GPUStack.Log.Info "[1/3] Running heat.exe to generate wxs file..."
-    heat.exe dir "$distDir" -o "$buildDir" -gg -sfrag -srd -sreg -ke -cg PyinstallerBuiltFiles -dr INSTALLFOLDER -var var.DistDir
+    heat.exe dir "$distDir" -o "$buildDir" -gg -sfrag -srd -sreg -ke -cg PyinstallerBuiltFiles -dr INSTALLFOLDER -var var.DistDir -platform x64
     if ($LASTEXITCODE -ne 0) { throw "heat.exe failed, exit code $LASTEXITCODE" }
 
     GPUStack.Log.Info "[2/3] Running candle.exe to compile wxs..."
-    candle.exe -dDistDir="$distDir" -dProductVersion="$productVersion" -dInstallationDir="." .\GPUStack.wxs $buildDir -ext WixUtilExtension -ext WixUIExtension
+    candle.exe -dDistDir="$distDir" -dProductVersion="$productVersion" -dInstallationDir="." .\GPUStack.wxs $buildDir -ext WixUtilExtension -ext WixUIExtension -arch x64
     if ($LASTEXITCODE -ne 0) { throw "candle.exe failed, exit code $LASTEXITCODE" }
 
     GPUStack.Log.Info "[3/3] Running light.exe to generate MSI installer..."

@@ -7,7 +7,7 @@
     <MediaTemplate EmbedCab="yes" />
 
     <Directory Id="TARGETDIR" Name="SourceDir">
-      <Directory Id="ProgramFilesFolder">
+      <Directory Id="ProgramFiles64Folder">
         <Directory Id="INSTALLFOLDER" Name="GPUStack">
         </Directory>
       </Directory>
@@ -19,7 +19,6 @@
     <Feature Id="GPUStackAll" Level="1">
       <ComponentGroupRef Id="ResourceFiles" />
       <ComponentGroupRef Id="PyinstallerBuiltFiles" />
-      <ComponentRef Id="GPUStackService" />
     </Feature>
 
     <DirectoryRef Id="GPUStackProgramMenu">
@@ -36,6 +35,7 @@
 
     <ComponentGroup Id="ResourceFiles">
       <ComponentRef Id="GPUStackShortcutComponent" />
+      <ComponentRef Id="GPUStackService" />
     </ComponentGroup>
 
     <Property Id="ARPPRODUCTICON" Value="InstallerIcon" />
@@ -47,7 +47,6 @@
         Id="StopGPUStack"
         Name="GPUStack"
         Stop="both"
-        Remove="uninstall"
         Wait="yes" />
         <RegistryValue Root="HKLM" Key="Software\Seal Software Co., Ltd.\GPUStack" Name="ServiceInstalled" Type="integer" Value="1" KeyPath="yes" />
     </Component>
@@ -58,9 +57,19 @@
       Execute="deferred" 
       Return="ignore" 
       Impersonate="no" />
+    <CustomAction
+      Id="DeleteGPUStackService"
+      Directory="INSTALLFOLDER"
+      ExeCommand="sc.exe delete GPUStack"
+      Execute="deferred"
+      Return="ignore"
+      Impersonate="no" />
     <InstallExecuteSequence>
         <Custom Action="KillGPUStackHelper" Before="RemoveFiles">
-            (UPGRADINGPRODUCTCODE AND NOT Installed) OR (REMOVE~="ALL" AND NOT UPGRADINGPRODUCTCODE  )
+          REMOVE~="ALL"
+        </Custom>
+        <Custom Action="DeleteGPUStackService" After="RemoveFiles">
+          REMOVE~="ALL" AND NOT UPGRADINGPRODUCTCODE
         </Custom>
     </InstallExecuteSequence>
   </Product>
