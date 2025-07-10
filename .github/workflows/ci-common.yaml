@@ -138,6 +138,8 @@ jobs:
           name: build-${{runner.os}}
 
   ci-windows:
+    env:
+      TOOLKIT_NAME: ${{ inputs.windows-toolkit-name || '' }}
     runs-on: windows-latest
     steps:
       - name: Checkout Code
@@ -163,13 +165,6 @@ jobs:
           path: |
             build/cache
           key: ${{ runner.os }}-llama-box-${{ hashFiles('**/poetry.lock') }}-${{ inputs.windows-toolkit-name || '' }}
-
-      - name: Conditionally set TOOLKIT_NAME
-        shell: bash
-        run: |
-          if [ -n "${{ inputs.windows-toolkit-name }}" ]; then
-            echo "TOOLKIT_NAME=${{ inputs.windows-toolkit-name }}" >> $GITHUB_ENV
-          fi
 
       - name: CI
         run: |
