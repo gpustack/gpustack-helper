@@ -51,8 +51,6 @@ class EnvironmentVariablePage(DataBindWidget):
 
     def remove_row(self):
         current_row = self.envvar.currentRow()
-        if hasattr(self, "_home_row") and current_row == self._home_row:
-            return  # Prevent deleting HOME row
         if current_row >= 0:
             self.envvar.removeRow(current_row)
 
@@ -118,7 +116,10 @@ class EnvironmentVariablePage(DataBindWidget):
         super().on_show(cfg, config)
         for row in range(self.envvar.rowCount()):
             key_widget = self.envvar.cellWidget(row, 0)
-            if isinstance(key_widget, QComboBox) and key_widget.currentText() == "HOME":
+            if isinstance(key_widget, QComboBox) and key_widget.currentText() in (
+                "HOME",
+                "APPDATA",
+            ):
                 # Set Value column to not editable
                 item = self.envvar.item(row, 1)
                 if item:
@@ -126,11 +127,6 @@ class EnvironmentVariablePage(DataBindWidget):
                 # Set Name column to not editable
                 key_widget.setEditable(False)
                 self.envvar.setRowHidden(row, True)
-                # Record HOME row index
-                self._home_row = row
-                break
-        else:
-            self._home_row = None
 
     def on_table_selection_changed(
         self, currentRow, currentColumn, previousRow, previousColumn
