@@ -6,7 +6,10 @@ import os
 from typing import Callable
 from PySide6.QtCore import QThread
 
-from gpustack_helper.defaults import nssm_binary_path
+from gpustack_helper.defaults import (
+    nssm_binary_path,
+    log_file_path,
+)
 from gpustack_helper.services.abstract_service import AbstractService
 from gpustack_helper.config import (
     active_helper_config,
@@ -84,11 +87,17 @@ def _sync_configs() -> None:
     config_data = active_helper_config().model_dump()
     helper_active = active_helper_config()
     if helper_legacy:
-        config_data["ProgramArguments"] = helper_active.default_program_arguments
-        config_data["data_dir"] = active_helper_config().data_dir
+        config_data["data_dir"] = helper_active.data_dir
         config_data["nssm_path"] = str(nssm_binary_path)
-    elif helper_active.ProgramArguments != helper_active.default_program_arguments:
-        config_data["ProgramArguments"] = helper_active.default_program_arguments
+    for key, default in (
+        ('ProgramArguments', helper_active.default_program_arguments),
+        ('StandardOutPath', log_file_path),
+        ('StandardErrorPath', log_file_path),
+    ):
+        value = getattr(helper_active, key, None)
+        if value is None or value != default:
+            config_data[key] = default
+
     helper_active.update_with_lock(**config_data)
 
 
