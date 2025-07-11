@@ -9,10 +9,18 @@
     <Directory Id="TARGETDIR" Name="SourceDir">
       <Directory Id="ProgramFiles64Folder">
         <Directory Id="INSTALLFOLDER" Name="GPUStack">
+          <Directory Id="GPUStackInternalDir" Name="_internal" />
         </Directory>
       </Directory>
       <Directory Id="ProgramMenuFolder">
         <Directory Id="GPUStackProgramMenu" Name="GPUStack" />
+      </Directory>
+      <Directory Id="CommonAppDataFolder">
+        <Directory Id="GPUStackGlobalData" Name="GPUStack">
+        </Directory>
+      </Directory>
+      <Directory Id="AppDataFolder">
+        <Directory Id="GPUStackUserData" Name="GPUStackHelper" />
       </Directory>
     </Directory>
 
@@ -29,13 +37,14 @@
                   Target="[INSTALLFOLDER]gpustackhelper.exe"
                   WorkingDirectory="INSTALLFOLDER" />
         <RemoveFolder Id="RemoveGPUStackProgramMenu" Directory="GPUStackProgramMenu" On="uninstall" />
-        <RegistryValue Root="HKCU" Key="Software\Seal Software Co., Ltd.\GPUStack" Name="Installed" Type="integer" Value="1" KeyPath="yes" />
+        <RegistryValue Root="HKCU" Key="Software\[Manufacturer]\[ProductName]" Name="Installed" Type="integer" Value="1" KeyPath="yes" />
       </Component>
     </DirectoryRef>
 
     <ComponentGroup Id="ResourceFiles">
       <ComponentRef Id="GPUStackShortcutComponent" />
       <ComponentRef Id="GPUStackService" />
+      <ComponentRef Id="UserDataComponent" />
     </ComponentGroup>
 
     <Property Id="ARPPRODUCTICON" Value="InstallerIcon" />
@@ -48,7 +57,13 @@
         Name="GPUStack"
         Stop="both"
         Wait="yes" />
-        <RegistryValue Root="HKLM" Key="Software\Seal Software Co., Ltd.\GPUStack" Name="ServiceInstalled" Type="integer" Value="1" KeyPath="yes" />
+        <RegistryValue Root="HKLM" Key="Software\[Manufacturer]\[ProductName]" Name="ServiceInstalled" Type="integer" Value="1" KeyPath="yes" />
+    </Component>
+    <Component Id="UserDataComponent" Guid="706fc9d2-30b7-4fcd-9622-c22bc4db940c" Directory="GPUStackUserData">
+      <CreateFolder />
+      <RemoveFile Id="RemoveGPUStackUserDataFiles" On="uninstall" Name="*" />
+      <RemoveFolder Id="RemoveGPUStackUserData" Directory="GPUStackUserData" On="uninstall" />
+      <RegistryValue Root="HKCU" Key="Software\[Manufacturer]\[ProductName]" Name="UserDataCreated" Type="integer" Value="1" KeyPath="yes" />
     </Component>
     <CustomAction 
       Id="KillGPUStackHelper" 
@@ -64,11 +79,21 @@
       Execute="deferred"
       Return="ignore"
       Impersonate="no" />
+    <CustomAction
+      Id="RemoveDataDir"
+      Directory="INSTALLFOLDER"
+      ExeCommand="cmd.exe /C rmdir /S /Q &quot;[GPUStackGlobalData]&quot; &amp; rmdir /S /Q &quot;[GPUStackInternalDir]&quot;"
+      Execute="deferred"
+      Return="ignore"
+      Impersonate="no" />
     <InstallExecuteSequence>
         <Custom Action="KillGPUStackHelper" Before="RemoveFiles">
           REMOVE~="ALL"
         </Custom>
         <Custom Action="DeleteGPUStackService" After="RemoveFiles">
+          REMOVE~="ALL" AND NOT UPGRADINGPRODUCTCODE
+        </Custom>
+        <Custom Action="RemoveDataDir" After="RemoveFiles">
           REMOVE~="ALL" AND NOT UPGRADINGPRODUCTCODE
         </Custom>
     </InstallExecuteSequence>
