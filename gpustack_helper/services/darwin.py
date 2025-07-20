@@ -30,6 +30,9 @@ def bash_escape_spaces(s: str) -> str:
 
 
 def is_plist_synced(active_plist_path: str) -> bool:
+    # if the plist doens't exist in launchdaemons, it is a fresh install and it should be synced
+    if not exists(plist_path):
+        return True
     return (
         exists(plist_path)
         and islink(plist_path)
