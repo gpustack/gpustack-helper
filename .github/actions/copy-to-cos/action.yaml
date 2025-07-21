@@ -128,8 +128,8 @@ runs:
               coscli symlink --method create "cos://${TENCENT_COS_BUCKET}/${TENCENT_COS_PATH_PREFIX}/${pkg_name}" --link "releases/latest/gpustack.pkg"
             fi
             if [[ -n "${msi_name}" ]]; then
-              coscli rm -rf "cos://${TENCENT_COS_BUCKET}/releases/latest/gpustack.msi"
-              coscli symlink --method create "cos://${TENCENT_COS_BUCKET}/${TENCENT_COS_PATH_PREFIX}/${msi_name}" --link "releases/latest/GPUStackHelper.msi"
+              coscli rm -rf "cos://${TENCENT_COS_BUCKET}/releases/latest/GPUStackInstaller.msi"
+              coscli symlink --method create "cos://${TENCENT_COS_BUCKET}/${TENCENT_COS_PATH_PREFIX}/${msi_name}" --link "releases/latest/GPUStackInstaller.msi"
             fi
           fi
           info "  TencentCOS release ${SYNC_DIR_NAME} synced."
