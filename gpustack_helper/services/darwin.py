@@ -4,6 +4,7 @@ import re
 import os
 from os.path import exists, islink
 from typing import Dict, Any, List, Tuple
+from PySide6.QtGui import QGuiApplication
 from PySide6.QtCore import QProcess
 from gpustack_helper.config import (
     user_helper_config,
@@ -172,7 +173,10 @@ def get_start_script(restart: bool = False) -> str:
         )
     )
     logger.debug(f"准备以admin权限运行该shell脚本 :\n{joined_script}")
-    return f"""do shell script "{joined_script}" with prompt "GPUStack 需要启动后台服务" with administrator privileges"""
+    text = QGuiApplication.translate(
+        'DarwinService', "GPUStack requires starting launchd service"
+    )
+    return f"""do shell script "{joined_script}" with prompt "{text}" with administrator privileges"""
 
 
 def launch_service(restart: bool = False) -> QProcess:
@@ -201,10 +205,13 @@ class DarwinService(AbstractService):
     def stop(self) -> QProcess:
         # prompt sudo privileges to run following command
         # 1. run launchctl bootout system /Library/LaunchDaemons/ai.gpustack.plist
+        text = QGuiApplication.translate(
+            'DarwinService', "GPUStack requires stopping launchd service"
+        )
         script = f"""
     do shell script "\
     launchctl bootout {service_id}\
-    " with prompt "GPUStack 需要停止后台服务" with administrator privileges
+    " with prompt "{text}" with administrator privileges
     """
         qprocess_stop = QProcess()
         qprocess_stop.setProgram("osascript")
