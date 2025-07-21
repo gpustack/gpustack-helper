@@ -9,6 +9,7 @@ jobs:
       python-version: '3.10'
       upload-artifacts: true
       setup-certificate: true
+      windows-toolkit-name: ${{ vars.WINDOWS_TOOLKIT_NAME || null }}
     secrets:
       P12_BASE64: ${{ secrets.P12_BASE64 }}
       P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
