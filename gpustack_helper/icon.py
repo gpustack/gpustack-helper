@@ -1,5 +1,6 @@
 from PySide6.QtGui import QIcon, QPixmap
 from gpustack_helper.defaults import icon_path
+import sys
 
 
 def create_disabled_icon(pixmap: QPixmap) -> QPixmap:
@@ -28,8 +29,9 @@ def get_icon(disabled: bool = False) -> QIcon:
     pixmap = QPixmap(icon_path)
     if disabled:
         pixmap = create_disabled_icon(pixmap)
-    else:
+    elif sys.platform == "darwin":
         pixmap = create_white_icon(pixmap)
     icon = QIcon(pixmap)
-    icon.setIsMask(not disabled)
+    if sys.platform == "darwin":
+        icon.setIsMask(not disabled)
     return icon
