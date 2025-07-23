@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi" xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi" 
+  xmlns:util="http://schemas.microsoft.com/wix/UtilExtension"
+  xmlns:fire="http://schemas.microsoft.com/wix/FirewallExtension">
   <Product Id="*" Name="GPUStack" Language="1033" Version="$(var.ProductVersion)" Manufacturer="Seal Software Co., Ltd." UpgradeCode="36e9d56a-5daa-4543-9e37-d2539e22636c" Codepage="65001">
     <Package InstallerVersion="500" Compressed="yes" InstallScope="perMachine" Platform="x64"/>
 
@@ -45,6 +47,7 @@
       <ComponentRef Id="GPUStackShortcutComponent" />
       <ComponentRef Id="GPUStackService" />
       <ComponentRef Id="UserDataComponent" />
+      <ComponentRef Id="GPUStackFirewallRules" />
     </ComponentGroup>
 
     <Property Id="ARPPRODUCTICON" Value="InstallerIcon" />
@@ -52,6 +55,23 @@
     <Icon Id="InstallerIcon" SourceFile="$(var.InstallationDir)\GPUStack.ico" />
     <UIRef Id="WixUI_InstallDir" />
     <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+    <Component Id="GPUStackFirewallRules" Guid="833646db-43f9-4c4d-a7ef-1ff3512e1407" Directory="INSTALLFOLDER">
+      <fire:FirewallException Id="GPUStackFirewallException"
+        Name="GPUStack"
+        Description="Allow GPUStack to communicate through the firewall"
+        Program="[INSTALLFOLDER]gpustack.exe"
+        Protocol="tcp"
+        IgnoreFailure="yes"
+        Scope="any"/>
+      <fire:FirewallException Id="LlamaBoxFirewallException"
+        Name="GPUStack LlamaBox"
+        Description="Allow llama-box to communicate through the firewall"
+        Program="[INSTALLFOLDER]\_internal\gpustack\third_party\bin\llama-box\llama-box-default\gpustack.exe"
+        Protocol="tcp"
+        IgnoreFailure="yes"
+        Scope="any" />
+      <RegistryValue Root="HKLM" Key="Software\[Manufacturer]\[ProductName]" Name="FirewallRules" Type="integer" Value="1" KeyPath="yes" />
+    </Component>
     <Component Id="GPUStackService" Guid="01228aaf-9d48-46ae-a2ec-8220022f9b95" Directory="INSTALLFOLDER">
       <ServiceControl 
         Id="StopGPUStack"
