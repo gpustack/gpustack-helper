@@ -22,11 +22,11 @@ function Build-Installer {
     if ($LASTEXITCODE -ne 0) { throw "heat.exe failed, exit code $LASTEXITCODE" }
 
     GPUStack.Log.Info "[2/3] Running candle.exe to compile wxs..."
-    candle.exe -dDistDir="$distDir" -dProductVersion="$productVersion" -dInstallationDir="." .\GPUStack.wxs $buildDir -ext WixUtilExtension -ext WixUIExtension -arch x64
+    candle.exe -dDistDir="$distDir" -dProductVersion="$productVersion" -dInstallationDir="." .\GPUStack.wxs $buildDir -ext WixUtilExtension -ext WixUIExtension -ext WixFirewallExtension -arch x64
     if ($LASTEXITCODE -ne 0) { throw "candle.exe failed, exit code $LASTEXITCODE" }
 
     GPUStack.Log.Info "[3/3] Running light.exe to generate MSI installer..."
-    light.exe -v -out "$outputMsi" .\GPUStack.wixobj .\_internal_files.wixobj -ext WixUIExtension -ext WixUtilExtension
+    light.exe -v -out "$outputMsi" .\GPUStack.wixobj .\_internal_files.wixobj -ext WixUIExtension -ext WixUtilExtension -ext WixFirewallExtension
     if ($LASTEXITCODE -ne 0) { throw "light.exe failed, exit code $LASTEXITCODE" }
 }
 
