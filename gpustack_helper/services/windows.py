@@ -70,6 +70,11 @@ def _relocate_legacy_files() -> None:
                         elif os.path.isdir(target_file):
                             shutil.rmtree(target_file)
                     shutil.move(file, gpustack_active.static_data_dir)
+                os.symlink(
+                    os.path.join(gpustack_active.static_data_dir, "cache"),
+                    os.path.join(gpustack_legacy.data_dir, "cache"),
+                    target_is_directory=True,
+                )
             except Exception as e:
                 logger.error(f"Failed to migrate data files: {e}")
 

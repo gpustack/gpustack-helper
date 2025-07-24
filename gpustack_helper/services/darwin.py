@@ -111,7 +111,8 @@ def get_start_script(restart: bool = False) -> str:
         f"mkdir -p '{gpustack_active.static_data_dir}';"
         f"for f in {bash_escape_spaces(old_gpustack_config.data_dir)}/*;"
         "do case \\\"$f\\\" in *.sh) continue ;; esac;"
-        f"mv -f \\\"$f\\\" '{gpustack_active.static_data_dir}';done"
+        f"mv -f \\\"$f\\\" '{gpustack_active.static_data_dir}';done;"
+        f"ln -s '{os.path.join(gpustack_active.static_data_dir, 'cache')}' '{os.path.join(bash_escape_spaces(old_gpustack_config.data_dir), 'cache')}'"
         if old_gpustack_config
         else None
     )
