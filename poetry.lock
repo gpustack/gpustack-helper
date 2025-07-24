@@ -2209,7 +2209,7 @@ vllm = ["bitsandbytes (>=0.45.2,<0.46.0)", "mistral_common[opencv] (>=1.4.3,<2.0
 type = "git"
 url = "https://github.com/gpustack/gpustack.git"
 reference = "main"
-resolved_reference = "6c7728d4f37e295a407437f235c0a2940d8eb987"
+resolved_reference = "9c89d0400894ed67c55522a70b9d8e48d6b86e0b"
 
 [[package]]
 name = "greenlet"
