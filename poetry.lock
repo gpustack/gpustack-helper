@@ -2141,75 +2141,71 @@ grpc = ["grpcio (>=1.44.0,<2.0.0.dev0)"]
 
 [[package]]
 name = "gpustack"
-version = "v0.0.0"
+version = "0.7.0rc1"
 description = "GPUStack"
 optional = false
-python-versions = ">=3.10,<3.13"
-files = []
-develop = false
+python-versions = "<3.13,>=3.10"
+files = [
+    {file = "gpustack-0.7.0rc1-py3-none-any.whl", hash = "sha256:338aeb6e03cce64984c7971c03219dd92e4b06a38f612e2fbc2958945349f7db"},
+    {file = "gpustack-0.7.0rc1.tar.gz", hash = "sha256:7a614c91435d2336bb9be4c1d032d595637ea62d9a0963e4421d50144abc07aa"},
+]
 
 [package.dependencies]
-aiocache = "^0.12.3"
-aiofiles = "^23.2.1"
-aiohttp = "^3.11.2"
-aiolimiter = "^1.2.1"
-aiosqlite = "^0.20.0"
-alembic = "^1.13.2"
-apscheduler = "^3.10.4"
-argon2-cffi = "^23.1.0"
-asyncmy = "^0.2.10"
-asyncpg = "^0.29.0"
-attrs = "^24.2.0"
-blobfile = "^3.0.0"
-colorama = "^0.4.6"
-cryptography = "^43.0.0"
-dataclasses-json = "^0.6.7"
-fastapi = "^0.115.0"
-fastapi-cdn-host = "^0.8.0"
-hf-transfer = "^0.1.9"
+aiocache = ">=0.12.3,<0.13.0"
+aiofiles = ">=23.2.1,<24.0.0"
+aiohttp = ">=3.11.2,<4.0.0"
+aiolimiter = ">=1.2.1,<2.0.0"
+aiosqlite = ">=0.20.0,<0.21.0"
+alembic = ">=1.13.2,<2.0.0"
+apscheduler = ">=3.10.4,<4.0.0"
+argon2-cffi = ">=23.1.0,<24.0.0"
+asyncmy = ">=0.2.10,<0.3.0"
+asyncpg = ">=0.29.0,<0.30.0"
+attrs = ">=24.2.0,<25.0.0"
+blobfile = ">=3.0.0,<4.0.0"
+colorama = ">=0.4.6,<0.5.0"
+cryptography = ">=43.0.0,<44.0.0"
+dataclasses-json = ">=0.6.7,<0.7.0"
+fastapi = ">=0.115.0,<0.116.0"
+fastapi-cdn-host = ">=0.8.0,<0.9.0"
+hf-transfer = ">=0.1.9,<0.2.0"
 httpx = {version = ">=0.27.0", extras = ["socks"]}
 huggingface-hub = ">=0.32.0"
-importlib-resources = "^6.4.0"
-inflection = "^0.5.1"
-modelscope = "^1.28"
-openai = "^1.31.1"
-packaging = "^24.1"
+importlib-resources = ">=6.4.0,<7.0.0"
+inflection = ">=0.5.1,<0.6.0"
+modelscope = ">=1.28,<2.0"
+openai = ">=1.31.1,<2.0.0"
+packaging = ">=24.1,<25.0"
 pandas = "*"
-prometheus-client = "^0.20.0"
-psutil = "^7.0.0"
-psycopg2-binary = "^2.9.10"
+prometheus-client = ">=0.20.0,<0.21.0"
+psutil = ">=7.0.0,<8.0.0"
+psycopg2-binary = ">=2.9.10,<3.0.0"
 pyarrow = "*"
-pydantic = "^2.11.5"
-pydantic-settings = "^2.2.1"
-pyjwt = "^2.8.0"
-pymysql = "^1.1.1"
-pytest-asyncio = "^0.23.7"
-python-json-logger = "^3.3.0"
-python-multipart = "^0.0.17"
-pywin32 = {version = "^308", markers = "platform_system == \"Windows\""}
+pydantic = ">=2.11.5,<3.0.0"
+pydantic-settings = ">=2.2.1,<3.0.0"
+pyjwt = ">=2.8.0,<3.0.0"
+pymysql = ">=1.1.1,<2.0.0"
+pytest-asyncio = ">=0.23.7,<0.24.0"
+python-json-logger = ">=3.3.0,<4.0.0"
+python-multipart = ">=0.0.17,<0.0.18"
+pywin32 = {version = ">=308,<309", markers = "platform_system == \"Windows\""}
 ray = {version = "2.43.0", extras = ["default"]}
-requests = "^2.32.3"
-setproctitle = "^1.3.3"
-sqlalchemy = {version = "^2.0.38", extras = ["asyncio"]}
-sqlmodel = "^0.0.18"
-tenacity = "^9.0.0"
-transformers = "^4.51.3"
-truststore = "^0.9.1"
-tzdata = "^2024.1"
-uvicorn = "^0.32.0"
-vox-box = {version = "0.0.19", optional = true}
-wmi = {version = "^1.5.1", markers = "platform_system == \"Windows\""}
+requests = ">=2.32.3,<3.0.0"
+setproctitle = ">=1.3.3,<2.0.0"
+sqlalchemy = {version = ">=2.0.38,<3.0.0", extras = ["asyncio"]}
+sqlmodel = ">=0.0.18,<0.0.19"
+tenacity = ">=9.0.0,<10.0.0"
+transformers = ">=4.51.3,<5.0.0"
+truststore = ">=0.9.1,<0.10.0"
+tzdata = ">=2024.1,<2025.0"
+uvicorn = ">=0.32.0,<0.33.0"
+vox-box = {version = "0.0.19", optional = true, markers = "extra == \"audio\" or extra == \"all\""}
+wmi = {version = ">=1.5.1,<2.0.0", markers = "platform_system == \"Windows\""}
 
 [package.extras]
 all = ["bitsandbytes (>=0.45.2,<0.46.0)", "mistral_common[opencv] (>=1.4.3,<2.0.0)", "timm (>=1.0.15,<2.0.0)", "vllm (==0.9.2)", "vox-box (==0.0.19)"]
 audio = ["vox-box (==0.0.19)"]
 vllm = ["bitsandbytes (>=0.45.2,<0.46.0)", "mistral_common[opencv] (>=1.4.3,<2.0.0)", "timm (>=1.0.15,<2.0.0)", "vllm (==0.9.2)"]
-
-[package.source]
-type = "git"
-url = "https://github.com/gpustack/gpustack.git"
-reference = "main"
-resolved_reference = "9c89d0400894ed67c55522a70b9d8e48d6b86e0b"
 
 [[package]]
 name = "greenlet"
@@ -8360,4 +8356,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.13"
-content-hash = "52a14d44fcd284737549f538a0862c7764424bc19f38cfc8a1c99bd38d543d7e"
+content-hash = "cfc1099b87c9f94abf725e3185088cc909290ff8dc64801a0b051a50f31b5d30"

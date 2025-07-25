@@ -12,8 +12,8 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = ">=3.10,<3.13"
-# gpustack = { version = "0.6.2", extras = ["audio"] }
-gpustack = { git = "https://github.com/gpustack/gpustack.git", branch = "main", extras = ["audio"] }
+gpustack = { version = "0.7.0rc1", extras = ["audio"] }
+# gpustack = { git = "https://github.com/gpustack/gpustack.git", branch = "main", extras = ["audio"] }
 
 PySide6-Essentials="~6.8"
 platformdirs = "^4.3.8"
