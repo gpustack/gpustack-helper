@@ -120,17 +120,6 @@ runs:
           if [[ "${DRY_RUN}" == "false" ]]; then
             info "      Syncing content in ${SYNC_FILE_PATH} to cos://${TENCENT_COS_BUCKET}/${TENCENT_COS_PATH_PREFIX}"
             coscli sync "${SYNC_FILE_PATH}/" "cos://${TENCENT_COS_BUCKET}/${TENCENT_COS_PATH_PREFIX}" --err-retry-num 3 --err-retry-interval 3 --recursive
-            pkg_name=$(basename $(ls ${SYNC_FILE_PATH}/*.pkg | head -n 1 || ''))
-            msi_name=$(basename $(ls ${SYNC_FILE_PATH}/*.msi | head -n 1 || ''))
-            info "      Creating latest symlink for ${pkg_name} and ${msi_name} in Tencent COS..."
-            if [[ -n "${pkg_name}" ]]; then
-              coscli rm -rf "cos://${TENCENT_COS_BUCKET}/releases/latest/gpustack.pkg"
-              coscli symlink --method create "cos://${TENCENT_COS_BUCKET}/${TENCENT_COS_PATH_PREFIX}/${pkg_name}" --link "releases/latest/gpustack.pkg"
-            fi
-            if [[ -n "${msi_name}" ]]; then
-              coscli rm -rf "cos://${TENCENT_COS_BUCKET}/releases/latest/GPUStackInstaller.msi"
-              coscli symlink --method create "cos://${TENCENT_COS_BUCKET}/${TENCENT_COS_PATH_PREFIX}/${msi_name}" --link "releases/latest/GPUStackInstaller.msi"
-            fi
           fi
           info "  TencentCOS release ${SYNC_DIR_NAME} synced."
         elif [[ -n "${SPECIFIC_RELEASE_TAG}" ]]; then
