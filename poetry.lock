@@ -2141,13 +2141,13 @@ grpc = ["grpcio (>=1.44.0,<2.0.0.dev0)"]
 
 [[package]]
 name = "gpustack"
-version = "0.7.0rc2"
+version = "0.7.0"
 description = "GPUStack"
 optional = false
 python-versions = "<3.13,>=3.10"
 files = [
-    {file = "gpustack-0.7.0rc2-py3-none-any.whl", hash = "sha256:bdda182f100404747626ab3ac695810a410bd87df372c995a36fdc623a12a698"},
-    {file = "gpustack-0.7.0rc2.tar.gz", hash = "sha256:0a0abeda65d4cb98e63d933fd9816ae9fce7664ef13151de46d4754193755134"},
+    {file = "gpustack-0.7.0-py3-none-any.whl", hash = "sha256:151a33b4d6d75c510b4bf203aa4bd6e6100a3aee40e80e875f584ad316f2b51a"},
+    {file = "gpustack-0.7.0.tar.gz", hash = "sha256:0e23ce210129233740e0e20e3349c48b56c00a0173ea7550921d600cfda309b7"},
 ]
 
 [package.dependencies]
@@ -8359,4 +8359,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.13"
-content-hash = "e3336ec2b49f926fa648261a4283c603cb02488345a419ad73675de96a229f23"
+content-hash = "46d087622df4a5c9bd89d7104dabf5ec3e61dd2812eaacecbf24d6ff6a4bbf1c"
