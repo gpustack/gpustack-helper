@@ -5,8 +5,8 @@ import logging
 from typing import Optional, List, Dict, get_origin, get_args
 from types import SimpleNamespace
 from functools import partial
-from gpustack.config import Config
-from gpustack.cmd.start import (
+from gpustack_helper.config.gpustack_config import (
+    Config,
     set_common_options,
     set_server_options,
     set_worker_options,

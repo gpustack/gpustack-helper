@@ -13,7 +13,7 @@ function Build {
     $distDir = Join-Path -Path $ROOT_DIR -ChildPath "dist"
     Remove-Item -Path $distDir -Recurse -Force -ErrorAction SilentlyContinue
 
-    $env:GIT_VERSION = $GIT_VERSION; poetry run pyinstaller windows.spec -y
+    $env:GIT_VERSION = $GIT_VERSION; poetry run pyinstaller helper.spec -y
     if ($LASTEXITCODE -ne 0) {
         GPUStack.Log.Fatal "failed to run pyinstaller."
     }

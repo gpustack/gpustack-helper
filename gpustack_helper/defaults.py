@@ -9,6 +9,7 @@ from platformdirs import (
 )
 
 app_name = "GPUStack"
+service_app_name = "GPUStackService"
 helper_name = app_name + "Helper"
 gpustack_config_name = "config.yaml"
 helper_config_file_name = "ai.gpustack.plist"
@@ -42,7 +43,43 @@ log_file_path = (
 )
 
 gpustack_binary_name = "gpustack" if sys.platform == "darwin" else "gpustack.exe"
-gpustack_binary_path = join(dirname(sys.executable), gpustack_binary_name)
+
+
+def is_running_in_app() -> bool:
+    if '.app/Contents/MacOS' in sys.executable:
+        return True
+    return False
+
+
+def locate_gpustack() -> str:
+    if sys.platform == "windows" or not getattr(sys, "frozen", False):
+        return join(dirname(sys.executable), gpustack_binary_name)
+    # in other case, it is built by pyinstaller and runs on MacOS.
+    if is_running_in_app():
+        svc_app_path = None
+        for svc_app in [
+            join(frozen_base, f"{service_app_name}.app"),
+            join(dirname(sys.executable), f"../../{service_app_name}.app"),
+        ]:
+            if os.path.exists(svc_app):
+                svc_app_path = svc_app
+                break
+        if svc_app_path is not None:
+            # if it has GPUStackService.app sub app, we need to point to the binary
+            # in GPUStackService.app/Contents/MacOS/gpustack
+            # otherwise, it is built by pyinstaller but runs in app.
+            return abspath(
+                join(
+                    svc_app_path,
+                    f'Contents/MacOS/{gpustack_binary_name}',
+                )
+            )
+
+    # otherwise, it is built by pyinstaller but runs in app.
+    return abspath(join(dirname(sys.executable), '../gpustack', gpustack_binary_name))
+
+
+gpustack_binary_path = locate_gpustack()
 
 nssm_binary_path = (
     join(resource_path, "nssm.exe")

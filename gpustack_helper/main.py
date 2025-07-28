@@ -3,7 +3,7 @@ import signal
 import argparse
 import logging
 import os
-from gpustack.utils.process import add_signal_handlers
+from gpustack_helper.process import add_signal_handlers
 from PySide6.QtWidgets import QApplication, QSystemTrayIcon, QMenu, QWidget
 from PySide6.QtGui import QAction, QDesktopServices, QIcon
 from PySide6.QtCore import (

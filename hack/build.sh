@@ -61,7 +61,19 @@ function cleanup_ui() {
 }
 
 function build() {
-  GIT_VERSION=${GIT_VERSION} poetry run pyinstaller darwin.spec -y
+  if ! GIT_VERSION=${GIT_VERSION} poetry run pyinstaller helper.spec -y; then
+    gpustack::log::fatal "failed to build gpustackhelper and gpustack."
+  fi
+  # copy GPUStackService.app to GPUStack.app/Contents/Resources and re-sign the app
+  if [ -d "${ROOT_DIR}/dist/GPUStack.app" ] && [ -d "${ROOT_DIR}/dist/GPUStackService.app" ]; then
+    # 复制 GPUStackService.app 到 GPUStack.app/Contents/Resources/
+    cp -R "${ROOT_DIR}/dist/GPUStackService.app" "${ROOT_DIR}/dist/GPUStack.app/Contents/Resources/"
+    
+    # 如果设置了代码签名身份，重新签名应用
+    if [ -n "${CODESIGN_IDENTITY:-}" ]; then
+        codesign --force --deep --sign "${CODESIGN_IDENTITY}" "${ROOT_DIR}/dist/GPUStack.app"
+    fi
+  fi
 }
 
 function prepare_dependencies() {
