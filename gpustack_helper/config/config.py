@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field, PrivateAttr
 from typing import List, Dict, Optional, Callable, TypeVar, Tuple
 from PySide6.QtWidgets import QWidget
 from PySide6.QtGui import QGuiApplication
-from gpustack.config import Config
+from gpustack_helper.config.gpustack_config import Config
 from gpustack_helper.defaults import (
     log_file_path,
     data_dir as default_data_dir,
@@ -73,6 +73,13 @@ class HelperConfig(BaseModel):
             f"--data-dir={self._data_dir}",
         ]
 
+    def _ensure_program_arguments(self) -> dict:
+        rtn = dict()
+        if sys.platform == "darwin" and self._binary_path and self._data_dir:
+            self.ProgramArguments = self.default_program_arguments
+            rtn['ProgramArguments'] = self.ProgramArguments
+        return rtn
+
     def _ensure_environment_home(self) -> None:
         if sys.platform != "darwin":
             return
@@ -85,6 +92,10 @@ class HelperConfig(BaseModel):
         This method is thread-safe and ensures that the configuration is updated
         atomically.
         """
+        kwargs = {
+            **kwargs,
+            **self._ensure_program_arguments(),
+        }
         self._backend.update_with_lock(**kwargs)
 
     def reload(self):
@@ -98,6 +109,7 @@ class HelperConfig(BaseModel):
         """
         Save the configuration to the specified path.
         """
+        self._ensure_program_arguments()
         self._ensure_environment_home()
         if self._backend is not None:
             self._backend.save()
@@ -123,10 +135,9 @@ class HelperConfig(BaseModel):
         )
         if backend is not None:
             self._backend = backend(self)
-        if len(self.ProgramArguments) == 0 and self._binary_path and self._data_dir:
-            self.ProgramArguments = self.default_program_arguments
         if len(kwargs) == 0:
             self.reload()
+        self._ensure_program_arguments()
         self._ensure_environment_home()
 
     @classmethod
@@ -140,8 +151,6 @@ class GPUStackConfig(Config):
     _backend: Optional[ModelBackend] = PrivateAttr(default=None)
     _confg_path: str = PrivateAttr(default=None)
     _data_dir: str = PrivateAttr(default=None)
-    # override the data_dir configured in Config
-    data_dir: Optional[str] = Field(default=None, exclude=True, description="数据目录")
 
     @property
     def static_data_dir(self) -> str:
