@@ -19,6 +19,7 @@ from gpustack_helper.defaults import (
     data_dir as default_data_dir,
     gpustack_config_name,
     helper_config_file_name,
+    get_legacy_data_dir,
 )
 
 if sys.platform == "win32":
@@ -412,7 +413,7 @@ def legacy_gpustack_config() -> Optional[GPUStackConfig]:
         return None
     args = simple_parse(helper_config.ProgramArguments)
     config_data = {}
-    config_data['data_dir'] = getattr(args, 'data_dir', Config.get_data_dir())
+    config_data['data_dir'] = getattr(args, 'data_dir', get_legacy_data_dir())
     if hasattr(args, 'data_dir'):
         delattr(args, 'data_dir')
     if hasattr(args, 'config_file') and os.path.exists(args.config_file):

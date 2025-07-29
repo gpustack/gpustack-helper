@@ -178,6 +178,18 @@ def get_dac_filename() -> str:
     return f"weights_{model_type_default}_{model_bitrate_default}_{tag}.pth"
 
 
+def get_legacy_data_dir():
+    app_name = "gpustack"
+    if os.name == "nt":  # Windows
+        data_dir = os.path.join(os.environ["APPDATA"], app_name)
+    elif os.name == "posix":
+        data_dir = f"/var/lib/{app_name}"
+    else:
+        raise Exception("Unsupported OS")
+
+    return os.path.abspath(data_dir)
+
+
 if __name__ == "__main__":
     print(f"Icon Path: {icon_path}")
     print(f"Data Directory: {data_dir}")
