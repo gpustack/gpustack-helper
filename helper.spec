@@ -48,6 +48,15 @@ def get_package_dir(package_name: str) -> str:
     package, subpackage = paths
     return str(files(package).joinpath(subpackage))
 
+for path in [
+    os.path.join(get_package_dir('vox_box'), 'third_party/CosyVoice'),
+    os.path.join(get_package_dir('vox_box'), 'third_party/dia'),
+    os.path.join(
+        get_package_dir('vox_box'), 'third_party/CosyVoice/third_party/Matcha-TTS'
+    ),
+]:
+    sys.path.insert(0, path)
+
 
 def get_toolkit_name(device: str) -> str:
     # Get the toolkit based on the device type.
@@ -307,15 +316,6 @@ def build_helper():
     return helper, helper_exe
 
 def build_gpustack():
-    for path in [
-        os.path.join(get_package_dir('vox_box'), 'third_party/CosyVoice'),
-        os.path.join(get_package_dir('vox_box'), 'third_party/dia'),
-        os.path.join(
-            get_package_dir('vox_box'), 'third_party/CosyVoice/third_party/Matcha-TTS'
-        ),
-    ]:
-        sys.path.insert(0, path)
-
     datas = [
         *collect_data_files('inflect', include_py_files=True),
         *collect_data_files('typeguard', include_py_files=True),
