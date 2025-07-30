@@ -123,6 +123,7 @@ class HelperConfig(BaseModel):
         config_path: Optional[str] = None,
         debug: Optional[bool] = None,
         gpustack_config_path: Optional[str] = None,
+        legacy: bool = False,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -137,8 +138,9 @@ class HelperConfig(BaseModel):
             self._backend = backend(self)
         if len(kwargs) == 0:
             self.reload()
-        self._ensure_program_arguments()
-        self._ensure_environment_home()
+        if not legacy:
+            self._ensure_program_arguments()
+            self._ensure_environment_home()
 
     @classmethod
     def bind(
@@ -248,6 +250,7 @@ def legacy_helper_config() -> Optional[HelperConfig]:
         backend=lambda x: FileConfigModel(
             x, filepath=runtime_plist_path, encoder=PlistEncoder
         ),
+        legacy=True,
     )
 
 
