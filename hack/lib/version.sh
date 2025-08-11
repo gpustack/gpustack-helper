@@ -91,13 +91,15 @@ function gpustack::version::get_version_vars() {
       major="${BASH_REMATCH[1]}"
       minor="${BASH_REMATCH[2]}"
       patch_base="${BASH_REMATCH[3]}"
+      patch_base_dec=$((10#$patch_base))
       run_number=${GITHUB_RUN_NUMBER:-99}
       patch_mod=$((run_number % 100))
-      new_patch=$((patch_base + patch_mod))
+      new_patch=$((patch_base_dec + patch_mod))
       if [ "$new_patch" -eq "$patch_base" ]; then
         new_patch=$((patch_base + 100))
       fi
-      GIT_VERSION="v${major}.${minor}.${new_patch}"
+      new_patch_fmt=$(printf "%04d" "$new_patch")
+      GIT_VERSION="v${major}.${minor}.${new_patch_fmt}"
     else
       # If no tag, patch=1, patch_base=0
       run_number=${GITHUB_RUN_NUMBER:-99}
