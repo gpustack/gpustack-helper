@@ -92,7 +92,8 @@ function Get-GPUStackVersionVar {
             if ($new_patch -eq $patch_base) {
                 $new_patch = $patch_base + 100
             }
-            $GIT_VERSION = "v$major.$minor.$new_patch"
+            $new_patch_fmt = "{0:D4}" -f $new_patch
+            $GIT_VERSION = "v$major.$minor.$new_patch_fmt"
         } else {
             # If no tag, patch=1+mod
             $patch_mod = [int]$GITHUB_RUN_NUMBER % 100
