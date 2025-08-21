@@ -14,6 +14,7 @@ function force_sign_app(){
   CODESIGN_IDENTITY="${CODESIGN_IDENTITY:-Developer ID Application: Seal Software Co., Ltd. (33M7PPLX4U)}"
   if ! security find-identity -v | grep -q "$CODESIGN_IDENTITY"; then
     gpustack::log::warn "Certificate '$CODESIGN_IDENTITY' not found. Skipping signing."
+    popd
     return 0
   fi
   codesign --deep --force --verify --verbose --sign "$CODESIGN_IDENTITY" --options runtime --timestamp "$APP_NAME"
