@@ -25,7 +25,11 @@
 <![CDATA[
     function InstallationCheck() {
         var output = system.applications.fromIdentifier('ai.gpustack');
-        var found = Array.isArray(output) && output.some(function(item) {
+        var output2 = system.applications.fromIdentifier('ai.gpustack.gpustack');
+        var merged = [];
+        if (Array.isArray(output)) merged = merged.concat(output);
+        if (Array.isArray(output2)) merged = merged.concat(output2);
+        var found = merged.some(function(item) {
             return item.CFBundleExecutable && 
                 item.CFBundleExecutable.split('/').pop() === 'gpustack';
         });
